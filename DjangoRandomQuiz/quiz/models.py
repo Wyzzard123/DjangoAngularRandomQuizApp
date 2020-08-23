@@ -20,6 +20,10 @@ class Topic(models.Model):
         return reduce(lambda cumulative_total, answer_count_per_question: cumulative_total + answer_count_per_question,
                [question.answers.count() for question in self.questions.all()])
 
+    def pool_of_choices(self):
+        """Returns all choices for a given topic and user."""
+        return Answer.objects.filter(creator=self.creator, questions__topic=self)
+
     def __str__(self):
         return self.name
 
@@ -58,6 +62,14 @@ class Question(models.Model):
         return self.answers.count() == 1
 
     @property
+    def answer(self):
+        """Returns the one right answer (model)"""
+        if self.has_one_answer():
+            return self.answers.all()[0]
+        else:
+            raise AttributeError("Question has multiple answers.")
+
+    @property
     def answer_text(self):
         """Return the text of the one right answer."""
         if self.has_one_answer():
@@ -70,7 +82,6 @@ class Question(models.Model):
         """Return a list of text of valid answers"""
         return [answer.text for answer in self.answers.all()]
 
-
     def is_right_answer(self, answer_text):
         """Check if an answer is right"""
         if not Answer.objects.filter(creator=self.creator, text=answer_text):
@@ -82,7 +93,6 @@ class Question(models.Model):
         else:
             # If there are multiple answers, check if the answer_text is in any of the correct answers.
             return answer_text in self.list_of_answer_text
-
 
     def __str__(self):
         return self.text
