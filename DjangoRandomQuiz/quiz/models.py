@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
 
+from functools import reduce
+
 
 class Topic(models.Model):
     """
@@ -8,6 +10,15 @@ class Topic(models.Model):
     """
     creator = models.ForeignKey(User, verbose_name="Creator", related_name="topics", on_delete=models.CASCADE)
     name = models.CharField(max_length=256, verbose_name="Topic Name")
+
+    def max_questions(self):
+        """Return the max number of questions for a given topic and user."""
+        return self.questions.count()
+
+    def max_choices(self):
+        """Returns the max number of choices for a given topic and user."""
+        return reduce(lambda cumulative_total, answer_count_per_question: cumulative_total + answer_count_per_question,
+               [question.answers.count() for question in self.questions.all()])
 
     def __str__(self):
         return self.name
