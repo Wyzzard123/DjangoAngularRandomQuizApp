@@ -1,4 +1,6 @@
-from .models import Topic, Question, Answer
+from django.contrib.auth.models import User
+
+from .models import Topic, Question, Answer, Quiz
 import random
 
 
@@ -124,20 +126,14 @@ def generate_quiz(user_id, topic_id, no_of_questions, no_of_choices,
             'choices': all_choices,
             'question_type': question_type
         })
+
+    Quiz.objects.create(
+        creator=User.objects.get(id=user_id),
+        quiz=quiz,
+    )
     return quiz
 
 
-
-
-
-
-
-
-
-
-
-
-            # TODO implement checkbox questions
 
 
 
