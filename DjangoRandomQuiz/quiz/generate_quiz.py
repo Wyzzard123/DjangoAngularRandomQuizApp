@@ -53,7 +53,7 @@ def generate_quiz(user_id, topic_id, no_of_questions, no_of_choices,
     instead of a radio button (one choice).
     """
     # Get quiz topic
-    quiz_topic = Topic.objects.get(creator__id=user_id, name=topic_id)
+    quiz_topic = Topic.objects.get(creator__id=user_id, id=topic_id)
 
     quiz = {"topic": quiz_topic.name,
             "questions": []}
@@ -127,11 +127,11 @@ def generate_quiz(user_id, topic_id, no_of_questions, no_of_choices,
             'question_type': question_type
         })
 
-    Quiz.objects.create(
+    quiz_object = Quiz.objects.create(
         creator=User.objects.get(id=user_id),
         quiz=quiz,
     )
-    return quiz
+    return quiz_object
 
 
 

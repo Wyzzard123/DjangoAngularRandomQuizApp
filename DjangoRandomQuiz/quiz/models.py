@@ -205,7 +205,7 @@ class Quiz(UUIDAndTimeStampAbstract):
 
         # For "questions": [{...}, {...}]... (See docstring)
         attempt_dict_questions_list = []
-        for index, question, chosen_answer_set in enumerate(zip(questions, chosen_answers)):
+        for question, chosen_answer_set in zip(questions, chosen_answers):
             question_text = question['question_text']
             question_model = Question.objects.get(creator=self.creator, text=question_text)
             original_choice_list = question['choices']
@@ -243,8 +243,8 @@ class Quiz(UUIDAndTimeStampAbstract):
             "score": score
         }
 
-        QuizAttempt.objects.create(quiz=self, quiz_attempt=quiz_attempt, score=score)
-        return quiz_attempt
+        quiz_attempt_object = QuizAttempt.objects.create(quiz=self, quiz_attempt=quiz_attempt, score=score)
+        return quiz_attempt_object
 
     class Meta:
         verbose_name = "Quiz"
@@ -256,7 +256,7 @@ class QuizAttempt(UUIDAndTimeStampAbstract):
     """Saves the attempts at a quiz."""
     quiz = models.ForeignKey(Quiz, verbose_name="Quiz", on_delete=models.SET_NULL, related_name="quiz_attempts", blank=True,
                              null=True)
-    quiz_attempt = PickledObjectField(verbose_name="Quiz Attempt", editable=False),
+    quiz_attempt = PickledObjectField(verbose_name="Quiz Attempt", editable=False)
     score = models.FloatField(verbose_name="Score")
 
     class Meta:
