@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,6 +64,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'oauth2_provider.middleware.OAuth2TokenMiddleware'
+]
+
+# Authentication configuration
+AUTHENTICATION_BACKENDS = [
+    # See https://django-oauth-toolkit.readthedocs.io/en/latest/tutorial/tutorial_03.html
+    #  However, it seems like this backend isn't required for the api to function
+    #  See https://django-oauth-toolkit.readthedocs.io/en/latest/rest-framework/getting_started.html where the backend
+    #  is not set.
+    # Note that if we use this backend, it must be placed before the django modelbackend. The modelbackend is required
+    #  to get into the admin page.
+    'oauth2_provider.backends.OAuth2Backend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'DjangoRandomQuiz.urls'
@@ -95,6 +109,7 @@ DATABASES = {
     'default': env.db(default='sqlite:////{}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))),
 }
 
+CLIENT_ID = env('CLIENT_ID', str, 'ABCDEFG')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

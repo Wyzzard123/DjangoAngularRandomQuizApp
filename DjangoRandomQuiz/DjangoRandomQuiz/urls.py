@@ -22,4 +22,6 @@ from quiz.api import TopicResource
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/topics/', include(TopicResource.urls())),
+    # Oauth links
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 ]
