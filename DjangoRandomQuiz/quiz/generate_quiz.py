@@ -2,7 +2,24 @@ from .models import Topic, Question, Answer
 import random
 
 
-def generate_quiz(user_id, topic_text, no_of_questions, no_of_choices,
+def generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices):
+    """Returns a list of text of wrong_choice text."""
+    possible_wrong_choices_copy = list(possible_wrong_choices)
+    wrong_choices = []
+    for _ in range(no_of_wrong_choices):
+        wrong_choice = random.choice(possible_wrong_choices_copy)
+        # Add wrong choices and retry if the wrong choice is already in the wrong_choices list.
+        while wrong_choice in wrong_choices:
+            wrong_choice = random.choice(possible_wrong_choices_copy)
+        wrong_choices.append(wrong_choice)
+        # Remove the wrong choice from the possible_wrong_choices_copy so that we don't end up in a possibly
+        #  infinite loop.
+        possible_wrong_choices_copy.remove(wrong_choice)
+    # Return a list of the text of the wrong choices
+    return [wrong_choice.text for wrong_choice in wrong_choices]
+
+
+def generate_quiz(user_id, topic_id, no_of_questions, no_of_choices,
                   show_all_alternative_answers=False):
     """
     Generate a list of questions based on a topic text, number of questions per topic and number of choices per
@@ -33,11 +50,11 @@ def generate_quiz(user_id, topic_text, no_of_questions, no_of_choices,
     For each question, if the max number of answers is more than one, the question will be a checkbox (multiple choices)
     instead of a radio button (one choice).
     """
-    quiz = {"topic": topic_text,
-            "questions": []}
-
     # Get quiz topic
-    quiz_topic = Topic.objects.get(creator__id=user_id, name=topic_text)
+    quiz_topic = Topic.objects.get(creator__id=user_id, name=topic_id)
+
+    quiz = {"topic": quiz_topic.name,
+            "questions": []}
 
     # Limit number of questions and number of choices
     max_questions = quiz_topic.max_questions()
@@ -52,22 +69,6 @@ def generate_quiz(user_id, topic_text, no_of_questions, no_of_choices,
 
     # Get a queryset of choices available to the topic.
     quiz_choices = quiz_topic.pool_of_choices()
-
-    def generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices):
-        """Returns a list of text of wrong_choice text."""
-        possible_wrong_choices_copy = list(possible_wrong_choices)
-        wrong_choices = []
-        for _ in range(no_of_wrong_choices):
-            wrong_choice = random.choice(possible_wrong_choices_copy)
-            # Add wrong choices and retry if the wrong choice is already in the wrong_choices list.
-            while wrong_choice in wrong_choices:
-                wrong_choice = random.choice(possible_wrong_choices_copy)
-            wrong_choices.append(wrong_choice)
-            # Remove the wrong choice from the possible_wrong_choices_copy so that we don't end up in a possibly
-            #  infinite loop.
-            possible_wrong_choices_copy.remove(wrong_choice)
-        # Return a list of the text of the wrong choices
-        return [wrong_choice.text for wrong_choice in wrong_choices]
 
     for question in quiz_questions:
         question_text = question.text
