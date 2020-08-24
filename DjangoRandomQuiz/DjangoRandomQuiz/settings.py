@@ -9,25 +9,36 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+from _socket import gethostname
 from pathlib import Path
 import os
+from random import SystemRandom
+
+from environ import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
-
+env = Env()
+if Path(BASE_DIR, 'config', '.env').is_file():
+    env.read_env(str(Path(BASE_DIR, 'config', '.env')))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '20u1*$i1a(a2pvhdu#fwcfm0a+0@n7$mlzr1uccyukc*c@iy@7'
+SECRET_KEY = env(
+    'SECRET_KEY',
+    str,
+    ''.join([SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)]),
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = tuple(env('ALLOWED_HOSTS', list, ['localhost', '127.0.0.1', gethostname(), '*']))
 
+# For now, allow CORS requests from all domains. TODO - Change this.
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
@@ -39,6 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'quiz.apps.QuizConfig',
+    'oauth2_provider',
+    'corsheaders',
     'restless',
 ]
 
@@ -77,11 +90,9 @@ WSGI_APPLICATION = 'DjangoRandomQuiz.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+# Databases configuration
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': env.db(default='sqlite:////{}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))),
 }
 
 
@@ -121,4 +132,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = env(
+        'STATIC_URL',
+        cast=str,
+        default='/static/'
+)
