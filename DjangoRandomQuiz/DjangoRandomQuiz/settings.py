@@ -52,7 +52,9 @@ INSTALLED_APPS = [
     'quiz.apps.QuizConfig',
     'oauth2_provider',
     'corsheaders',
-    'restless',
+    # 'restless',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
