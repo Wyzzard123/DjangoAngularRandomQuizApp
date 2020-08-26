@@ -15,13 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from quiz.api import TopicResource
-
+# from quiz.api import TopicResource
+from rest_framework import routers
+from rest_framework.authtoken.views import ObtainAuthToken
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/topics/', include(TopicResource.urls())),
+    # path('api/topics/', include(TopicResource.urls())),
     # Oauth links
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    # path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('auth/', ObtainAuthToken.as_view())
 ]
