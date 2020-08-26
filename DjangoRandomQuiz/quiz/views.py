@@ -8,11 +8,12 @@ from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from quiz.mixins import NoUpdateCreatorMixin
 from quiz.models import Topic, Question, Answer
 from quiz.serializers import TopicSerializer, QuestionSerializer, AnswerSerializer, UserSerializer
 
 
-class TopicAPIView(viewsets.ModelViewSet):
+class TopicAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL topics belonging to a user"""
     serializer_class = TopicSerializer
 
@@ -24,7 +25,7 @@ class TopicAPIView(viewsets.ModelViewSet):
         return Topic.objects.filter(creator=user)
 
 
-class QuestionAPIView(viewsets.ModelViewSet):
+class QuestionAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL questions belonging to a user"""
     serializer_class = QuestionSerializer
 
@@ -36,7 +37,7 @@ class QuestionAPIView(viewsets.ModelViewSet):
         return Question.objects.filter(creator=user)
 
 
-class AnswerAPIView(viewsets.ModelViewSet):
+class AnswerAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL answers belonging to a user"""
     serializer_class = AnswerSerializer
 
