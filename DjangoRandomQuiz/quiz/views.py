@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render
 
 # Create your views here.
@@ -5,10 +6,10 @@ from rest_framework import generics
 from rest_framework import viewsets
 
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from quiz.models import Topic, Question, Answer
-from quiz.serializers import TopicSerializer, QuestionSerializer, AnswerSerializer
+from quiz.serializers import TopicSerializer, QuestionSerializer, AnswerSerializer, UserSerializer
 
 
 class TopicAPIView(viewsets.ModelViewSet):
@@ -45,3 +46,13 @@ class AnswerAPIView(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Answer.objects.filter(creator=user)
+
+
+class UserCreateView(generics.CreateAPIView):
+    """Used to register users from the frontend.
+    See: https://nemecek.be/blog/23/how-to-createregister-user-account-with-django-rest-framework-api"""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    # Anyone should be able to register.
+    permission_classes = (AllowAny, )

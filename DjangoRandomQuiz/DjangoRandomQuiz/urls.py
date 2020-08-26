@@ -21,7 +21,7 @@ from rest_framework import routers
 # TODO - Use something more sophisticated eventually.
 from rest_framework.authtoken.views import ObtainAuthToken
 
-from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView
+from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView, UserCreateView
 
 router = routers.DefaultRouter()
 # We need to pass in basename as we have not set a queryset (we used get_queryset instead) in the TopicAPIView.
@@ -38,6 +38,7 @@ urlpatterns = [
 
     # The obtain_auth_token view will return a JSON response when valid username and password fields are POSTed to the
     # view using form data or JSON:
-    path('auth/', ObtainAuthToken.as_view()),
-    path('api/', include(router.urls,))
+    path('auth/', ObtainAuthToken.as_view(), name='auth'),
+    path('api/', include(router.urls,), name='api'),
+    path('register/', UserCreateView.as_view(), name='register')
 ]
