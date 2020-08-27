@@ -1,3 +1,4 @@
+import random
 import uuid
 
 from django.contrib.auth.models import User
@@ -6,6 +7,8 @@ from django.db import models
 from functools import reduce
 
 from picklefield import PickledObjectField
+
+from quiz.generate_quiz import generate_list_of_wrong_choices
 
 
 class GenerateUUIDAbstract(models.Model):
@@ -75,6 +78,121 @@ class Topic(UUIDAndTimeStampAbstract):
         verbose_name_plural = "Topics"
         default_related_name = "topics"
         unique_together = [["creator", "name"]]
+
+    def generate_quiz(self, no_of_questions, no_of_choices,
+                      show_all_alternative_answers=False):
+        """
+        Generate a list of questions based on a topic text, number of questions per topic and number of choices per
+        question.
+
+        If no_of_questions is more than the number of Question models for a given User and Topic, the no_of_questions will
+        be changed to the max number of Question models.
+
+        If no_of_choices is more than the number of answer models for a given answer and topic, the no_of_choices will be
+        changed to the max number of Answer models.
+
+        We will then save a dict with the following dict to the Quiz model (the id is added after saving once):
+
+        {
+            "id": quiz_model_id,
+            "topic": topic_text,
+            "questions": [
+                {'question_text': question_text_1, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'},
+                {'question_text': question_text_2, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'radio'},
+                ...,
+                {'question_text': question_text_n, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'}
+            ]
+        }
+
+        If show_all_alternative_answers is True (False by default), each question will (as far as possible within the
+        no_of_choices constraint), each question will have all possible answers shown. Otherwise, the number of correct
+        alternative answers shown will be random.
+
+        For each question, if the max number of answers is more than one, the question will be a checkbox (multiple choices)
+        instead of a radio button (one choice).
+        """
+        # Get quiz topic
+        quiz_topic = self
+
+        quiz = {"topic": quiz_topic.name,
+                "questions": []}
+
+        # Limit number of questions and number of choices
+        max_questions = quiz_topic.max_questions()
+        no_of_questions = no_of_questions if no_of_questions <= max_questions else max_questions
+
+        max_choices = quiz_topic.max_choices()
+        no_of_choices = no_of_choices if no_of_choices <= max_choices else max_choices
+
+        # Get the required number of questions in the right order.
+        # Order by ('?') allows us to scramble the data randomly.
+        quiz_questions = quiz_topic.questions.order_by('?')[:no_of_questions]
+
+        # Get a queryset of choices available to the topic.
+        quiz_choices = quiz_topic.pool_of_choices()
+
+        for question in quiz_questions:
+            question_text = question.text
+            if question.has_one_answer():
+                question_type = "radio"
+                correct_answer = question.answer
+                no_of_wrong_choices = no_of_choices - 1
+
+                possible_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
+
+                wrong_choices = generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices)
+                all_choices = [correct_answer.text, *wrong_choices]
+            else:
+                question_type = "checkbox"
+                correct_answers = question.answers.all()
+
+                possible_wrong_choices = quiz_choices
+                # Chain .exclude() to exclude all correct answers from the set of wrong_choices.
+                for correct_answer in correct_answers:
+                    possible_wrong_choices = possible_wrong_choices.exclude(id=correct_answer.id)
+
+                # We have to calibrate the number of correct answers based on the max number of wrong choices. If we have
+                #  too few possible wrong choices, we cannot have too few correct answers.
+                max_no_of_wrong_choices = len(possible_wrong_choices)
+                min_no_of_correct_answers = no_of_choices - max_no_of_wrong_choices
+
+                # The number of correct answers cannot be higher than the number of choices, but it also cannot be higher
+                #  than the total number of possible correct answers.
+                max_no_of_correct_answers = min(correct_answers.count(), no_of_choices)
+
+                # Randomly allocate the number of correct answers with a number between the minimum and maximum number of
+                #  correct answers.
+                if not show_all_alternative_answers:
+                    no_of_correct_answers = random.randint(min_no_of_correct_answers, max_no_of_correct_answers)
+                else:
+                    # If we say show_all_alternative_answers, we will either show all the correct answers or the max no of
+                    #  choices per question, depending on which is lower.
+                    no_of_correct_answers = max_no_of_correct_answers
+
+                # No of wrong choices will be no of choices minus no of correct answers.
+                no_of_wrong_choices = no_of_choices - no_of_correct_answers
+
+                wrong_choices = generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices)
+                correct_answers = random.sample([correct_answer.text for correct_answer in correct_answers],
+                                                no_of_correct_answers)
+                all_choices = [*correct_answers, *wrong_choices]
+            # all_choices = [choice for choice in all_choices]
+            # Shuffle the list of choices
+            random.shuffle(all_choices)
+
+            # Add the question dict to the quiz's questions field.
+            quiz['questions'].append({
+                'question_text': question_text,
+                'choices': all_choices,
+                'question_type': question_type
+            })
+
+        quiz_object = Quiz.objects.create(
+            creator=self.creator,
+            quiz=quiz,
+        )
+        quiz_object.quiz.update({'id': quiz_object.id})
+        return quiz_object
 
 
 class Answer(UUIDAndTimeStampAbstract):
@@ -148,11 +266,13 @@ class Question(UUIDAndTimeStampAbstract):
 
 
 class Quiz(UUIDAndTimeStampAbstract):
-    """Holds a randomly generated quiz of a given ID or UUID for a particular user.
+    """
+    Holds a randomly generated quiz of a given ID or UUID for a particular user.
     This is used so we can check answers and also keep data about past quizzes.
 
     Quiz will be in this format:
      {
+        "id": quiz_model_id,
         "topic": topic_text,
         "questions": [
             {'question_text': question_text_1, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'},
@@ -161,6 +281,7 @@ class Quiz(UUIDAndTimeStampAbstract):
             {'question_text': question_text_n, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'}
         ]
     }
+    The id field allows us to get the same quiz back when we check answers.
     """
     creator = models.ForeignKey(User, verbose_name="Creator", related_name="quizzes", on_delete=models.CASCADE)
 
