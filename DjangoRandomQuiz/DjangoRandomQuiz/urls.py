@@ -18,16 +18,15 @@ from django.urls import path, include
 # from quiz.api import TopicResource
 from rest_framework import routers
 
-# TODO - Use something more sophisticated eventually.
-from rest_framework.authtoken.views import ObtainAuthToken
-
-from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView, UserCreateView
+from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView, UserCreateView, QuestionAnswerCreateAPIView
 
 router = routers.DefaultRouter()
 # We need to pass in basename as we have not set a queryset (we used get_queryset instead) in the TopicAPIView.
 router.register('topics', TopicAPIView, basename='topic')
 router.register('questions', QuestionAPIView, basename='question')
 router.register('answers', AnswerAPIView, basename='answer')
+# create_qa creates a Question, Answers and attaches the question to a topic.
+router.register('create_qa', QuestionAnswerCreateAPIView, basename='create_qa')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,10 +34,9 @@ urlpatterns = [
     # Oauth links
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
-
     # The obtain_auth_token view will return a JSON response when valid username and password fields are POSTed to the
     # view using form data or JSON:
     # path('auth/', ObtainAuthToken.as_view(), name='auth'),
     path('api/', include(router.urls,), name='api'),
-    path('register/', UserCreateView.as_view(), name='register')
+    path('register/', UserCreateView.as_view(), name='register'),
 ]

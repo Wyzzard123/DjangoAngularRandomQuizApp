@@ -23,11 +23,24 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = ['id', 'creator', 'text', 'questions']
 
 
+class QuestionAnswerSerializer(serializers.Serializer):
+    """Create a question with a set of given answers using this serializer."""
+    # Topic field takes an ID.
+    topic = serializers.IntegerField()
+    question = serializers.CharField(max_length=None)
+
+    # We will have a list of answers so we can have as many answers connected to one question as we want.
+    answers = serializers.ListField(
+        child=serializers.CharField(max_length=None)
+    )
+
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Used to register users.
     See https://nemecek.be/blog/23/how-to-createregister-user-account-with-django-rest-framework-api
     """
+
     class Meta:
         model = User
         fields = ['username', 'password']
