@@ -35,6 +35,16 @@ class QuestionAnswerSerializer(serializers.Serializer):
     )
 
 
+class QuizSerializer(serializers.Serializer):
+    """Pass in fields to generate a quiz for a given topic with a no_of_choices and no_of_questions."""
+    # Topic ID
+    topic = serializers.IntegerField()
+
+    # Parameters to be passed in to the generate_quiz method of topic.
+    no_of_questions = serializers.IntegerField()
+    no_of_choices = serializers.IntegerField()
+    show_all_alternative_answers = serializers.BooleanField(default=False)
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Used to register users.
