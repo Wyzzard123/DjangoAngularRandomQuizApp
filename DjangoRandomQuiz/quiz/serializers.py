@@ -37,8 +37,8 @@ class QuestionAnswerSerializer(serializers.Serializer):
 
 class QuizSerializer(serializers.Serializer):
     """Pass in fields to generate a quiz for a given topic with a no_of_choices and no_of_questions."""
-    # Topic ID
-    topic = serializers.IntegerField()
+    # Topic ID (TODO - get this in the retrieve. No need to get this here).
+    # topic = serializers.IntegerField()
 
     # Parameters to be passed in to the generate_quiz method of topic.
     no_of_questions = serializers.IntegerField()
