@@ -94,14 +94,14 @@ class Topic(UUIDAndTimeStampAbstract):
         We will then save a dict with the following dict to the Quiz model (the id is added after saving once):
 
         {
-            "id": quiz_model_id,
             "topic": topic_text,
             "questions": [
                 {'question_text': question_text_1, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'},
                 {'question_text': question_text_2, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'radio'},
                 ...,
                 {'question_text': question_text_n, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'}
-            ]
+            ],
+            "id": quiz_model_id,
         }
 
         If show_all_alternative_answers is True (False by default), each question will (as far as possible within the
@@ -272,14 +272,14 @@ class Quiz(UUIDAndTimeStampAbstract):
 
     Quiz will be in this format:
      {
-        "id": quiz_model_id,
         "topic": topic_text,
         "questions": [
             {'question_text': question_text_1, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'},
             {'question_text': question_text_2, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'radio'},
             ...,
             {'question_text': question_text_n, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'}
-        ]
+        ],
+        "id": quiz_model_id,
     }
     The id field allows us to get the same quiz back when we check answers.
     """
