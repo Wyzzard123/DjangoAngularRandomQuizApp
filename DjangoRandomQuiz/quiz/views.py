@@ -134,13 +134,15 @@ class QuestionAnswerCreateAPIView(QuizViewSet):
 class GenerateQuizAPIView(QuizViewSet):
     """
     For this end point, we must pass in a topic ID. We will then get the relevant topic and generate a quiz using
+    no_of_choices and no_of_questions
     """
     def retrieve(self, request, pk, format=None):
-        """Pass in the pk of a topic as the 'pk'. We will use this topic and return a random quiz.
+        """
+        Pass in the pk of a topic as the 'pk'. We will use this topic and return a random quiz.
 
         curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
-         --data '{"answers":[[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]}'
-         "<url>/api/attempt_quiz/<quiz_id>/"
+         --data '{"no_of_questions":"<no_of_questions>","no_of_choices":"<no_of_choices>"}'
+         "127.0.0.1:8000/api/generate_quiz/<topic_id>/"
          """
         try:
             # Get the relevant topic.
@@ -165,12 +167,23 @@ class CheckQuizAnswersAPIView(viewsets.ViewSet):
     Takes in a list of answers and attempts to answer a quiz of a particular ID (passed in as the pk).
 
     Returns a dict with the quiz answers.
+
+    curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
+         --data '{"answers":[[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]}'
+         "<url>/api/attempt_quiz/<quiz_id>/"
     """
     def quiz_queryset(self):
         """Only search topics from what the user has created."""
         return Quiz.objects.filter(creator=self.request.user)
 
     def retrieve(self, request, pk):
+        """
+        Pass in the pk of a quiz as the 'pk'. We will attempt this particular quiz and return the attempt dictionary.
+
+        curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
+         --data '{"answers":[[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]}'
+         "<url>/api/attempt_quiz/<quiz_id>/"
+             """
         try:
             # Get the relevant topic.
             quiz = self.quiz_queryset().get(id=pk)
