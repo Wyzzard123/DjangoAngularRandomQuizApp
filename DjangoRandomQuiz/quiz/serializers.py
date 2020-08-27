@@ -36,14 +36,30 @@ class QuestionAnswerSerializer(serializers.Serializer):
 
 
 class QuizSerializer(serializers.Serializer):
-    """Pass in fields to generate a quiz for a given topic with a no_of_choices and no_of_questions."""
-    # Topic ID (TODO - get this in the retrieve. No need to get this here).
-    # topic = serializers.IntegerField()
+    """
+    Pass in fields to generate a quiz for a given topic with a no_of_choices and no_of_questions.
+    The topic id will be passed in the get request as the PK.
+    """
 
     # Parameters to be passed in to the generate_quiz method of topic.
     no_of_questions = serializers.IntegerField()
     no_of_choices = serializers.IntegerField()
     show_all_alternative_answers = serializers.BooleanField(default=False)
+
+
+class QuizAnswerSerializer(serializers.Serializer):
+    """
+    Pass in a list of lists of answer texts to check answers against.
+
+    Answers should come in the following format:
+        [[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]
+    """
+    answers = serializers.ListField(
+        child=serializers.ListField(
+            child=serializers.CharField(max_length=None)
+        )
+    )
+
 
 class UserSerializer(serializers.ModelSerializer):
     """

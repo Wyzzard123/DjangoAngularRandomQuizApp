@@ -299,8 +299,8 @@ class Quiz(UUIDAndTimeStampAbstract):
         """TODO - See what the format of receiving the answers is.
         For each chosen answer per a given question, check if the answer is correct.
 
-        Assuming that chosen_answers comes in the following format for now:
-        [answer_text_1, [answer_text_2_1, answer_text_2_2], ...]
+        Assuming that chosen_answers comes in the following format with a list of lists of choices:
+        [[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]
 
         Return a format similar to the quiz:
 
@@ -317,6 +317,7 @@ class Quiz(UUIDAndTimeStampAbstract):
         "no_of_correct_answers": 3,
         "no_of_wrong_answers": 2,
         "score": 0.6,
+        "id": <quiz_attempt_id>
         }
 
         """
@@ -365,6 +366,9 @@ class Quiz(UUIDAndTimeStampAbstract):
         }
 
         quiz_attempt_object = QuizAttempt.objects.create(quiz=self, quiz_attempt=quiz_attempt, score=score)
+        # Add in the quiz_attempt id to the quiz_attempt dictionary.
+        quiz_attempt_object.quiz_attempt['id'] = quiz_attempt_object.id
+        quiz_attempt_object.save()
         return quiz_attempt_object
 
     class Meta:

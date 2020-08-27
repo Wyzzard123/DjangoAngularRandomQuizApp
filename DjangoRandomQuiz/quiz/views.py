@@ -10,9 +10,9 @@ from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope
 from rest_framework.response import Response
 
 from quiz.mixins import NoUpdateCreatorMixin
-from quiz.models import Topic, Question, Answer
+from quiz.models import Topic, Question, Answer, Quiz
 from quiz.serializers import TopicSerializer, QuestionSerializer, AnswerSerializer, UserSerializer, \
-    QuestionAnswerSerializer, QuizSerializer
+    QuestionAnswerSerializer, QuizSerializer, QuizAnswerSerializer
 
 
 class TopicAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
@@ -86,6 +86,7 @@ class QuestionAnswerCreateAPIView(QuizViewSet):
           "<answer_text_3>"]}' "127.0.0.1:8000/api/create_qa/"
         """
         serializer = QuestionAnswerSerializer(data=request.data)
+
         if serializer.is_valid():
             topic_id = serializer.validated_data['topic']
             question_text = serializer.validated_data['question']
@@ -126,6 +127,7 @@ class QuestionAnswerCreateAPIView(QuizViewSet):
                 'answers': [answer.id for answer in list_of_answer_instances]
             }
             return Response(response_dict, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -137,7 +139,8 @@ class GenerateQuizAPIView(QuizViewSet):
         """Pass in the pk of a topic as the 'pk'. We will use this topic and return a random quiz.
 
         curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
-         --data '{"no_of_questions":"5","no_of_choices":"4"}' "<url>/api/generate_quiz/<topic_id>/"
+         --data '{"answers":[[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]}'
+         "<url>/api/attempt_quiz/<quiz_id>/"
          """
         try:
             # Get the relevant topic.
@@ -147,12 +150,44 @@ class GenerateQuizAPIView(QuizViewSet):
             return Response({"Error": "Topic Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = QuizSerializer(data=request.data)
+
         if serializer.is_valid():
             no_of_questions = serializer.validated_data['no_of_questions']
             no_of_choices = serializer.validated_data['no_of_choices']
             randomly_generated_quiz = topic.generate_quiz(no_of_questions=no_of_questions, no_of_choices=no_of_choices).quiz
             return Response(randomly_generated_quiz, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckQuizAnswersAPIView(viewsets.ViewSet):
+    """
+    Takes in a list of answers and attempts to answer a quiz of a particular ID (passed in as the pk).
+
+    Returns a dict with the quiz answers.
+    """
+    def quiz_queryset(self):
+        """Only search topics from what the user has created."""
+        return Quiz.objects.filter(creator=self.request.user)
+
+    def retrieve(self, request, pk):
+        try:
+            # Get the relevant topic.
+            quiz = self.quiz_queryset().get(id=pk)
+        except Exception as e:
+            # Topic does not exist.
+            return Response({"Error": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = QuizAnswerSerializer(data=request.data)
+        if serializer.is_valid():
+            chosen_answers = serializer.validated_data['answers']
+            quiz_attempt = quiz.check_quiz_answers(chosen_answers=chosen_answers).quiz_attempt
+            return Response(quiz_attempt, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 class UserCreateView(generics.CreateAPIView):
