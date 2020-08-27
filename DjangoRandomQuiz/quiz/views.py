@@ -5,8 +5,10 @@ from django.shortcuts import render
 from rest_framework import generics
 from rest_framework import viewsets
 
-from rest_framework.authentication import TokenAuthentication
+# from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 
 from quiz.mixins import NoUpdateCreatorMixin
 from quiz.models import Topic, Question, Answer
@@ -17,8 +19,7 @@ class TopicAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL topics belonging to a user"""
     serializer_class = TopicSerializer
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TokenHasReadWriteScope)
 
     def get_queryset(self):
         user = self.request.user
@@ -29,8 +30,8 @@ class QuestionAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL questions belonging to a user"""
     serializer_class = QuestionSerializer
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication, TokenHasReadWriteScope)
+    permission_classes = (IsAuthenticated, TokenHasReadWriteScope)
 
     def get_queryset(self):
         user = self.request.user
@@ -41,8 +42,8 @@ class AnswerAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL answers belonging to a user"""
     serializer_class = AnswerSerializer
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated, TokenHasReadWriteScope)
 
     def get_queryset(self):
         user = self.request.user

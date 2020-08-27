@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'corsheaders',
     # 'restless',
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +68,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'oauth2_provider.middleware.OAuth2TokenMiddleware'
 ]
+
+# Use the oauth toolkit's oauth tokens instead of the django rest framework tokens.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ]
+}
 
 # Authentication configuration
 AUTHENTICATION_BACKENDS = [
