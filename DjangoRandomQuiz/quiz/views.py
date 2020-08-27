@@ -49,11 +49,10 @@ class AnswerAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
         return Answer.objects.filter(creator=user)
 
 
-class QuestionAnswerCreateAPIView(viewsets.ViewSet):
+class QuizViewSet(viewsets.ViewSet):
     """
-    Create a question with one or more answers.
-
-    See https://www.django-rest-framework.org/tutorial/3-class-based-views/ for how to create an API View.
+    Defines a queryset for the topic, answer and question models restricted to the current user. The
+    generate quiz method will use this.
     """
     def topic_queryset(self):
         """Only search topics from what the user has created."""
@@ -67,6 +66,13 @@ class QuestionAnswerCreateAPIView(viewsets.ViewSet):
         """Only search questions from what the user has created."""
         return Question.objects.filter(creator=self.request.user)
 
+
+class QuestionAnswerCreateAPIView(QuizViewSet):
+    """
+    Create a question with one or more answers.
+
+    See https://www.django-rest-framework.org/tutorial/3-class-based-views/ for how to create an API View.
+    """
     # Using 'create' instead of post so we can use a ViewSet and register to the router.
     # See https://stackoverflow.com/questions/30389248/how-can-i-register-a-single-view-not-a-viewset-on-my-router
     def create(self, request, format=None):
