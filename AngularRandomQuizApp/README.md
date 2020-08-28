@@ -1,5 +1,11 @@
 # AngularRandomQuizApp
 
+
+# Notes:
+1. See how to set up environment variables without putting them in environment.prod.ts: https://medium.com/javascript-in-plain-english/setup-dotenv-to-access-environment-variables-in-angular-9-f06c6ffb86c0
+
+
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.6.
 
 ## Development server
