@@ -7,9 +7,6 @@ import {UserService} from "./user.service";
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  // User for the login form.
-  public user: any;
-
   // An array of all the topics from the API.
   public topics: any;
 
@@ -17,23 +14,4 @@ export class AppComponent {
   public newTopic: any;
 
   constructor(public _userService: UserService) { }
-
-  ngOnInit() {
-    this.user = {
-      username: '',
-      password: ''
-    };
-  }
-
-  login(): any {
-    this._userService.login({username: this.user.username, password: this.user.password});
-  }
-
-  refreshTokenAPI(refreshToken): any {
-    this._userService.refreshTokenAPI(this.user, refreshToken);
-  }
-
-  logout(): any {
-    this._userService.logout()
-  }
 }
