@@ -136,11 +136,11 @@ class GenerateQuizAPIView(QuizViewSet):
     For this end point, we must pass in a topic ID. We will then get the relevant topic and generate a quiz using
     no_of_choices and no_of_questions
     """
-    def retrieve(self, request, pk, format=None):
+    def update(self, request, pk, format=None):
         """
         Pass in the pk of a topic as the 'pk'. We will use this topic and return a random quiz.
 
-        curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
+        curl -X PUT -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
          --data '{"no_of_questions":"<no_of_questions>","no_of_choices":"<no_of_choices>"}'
          "127.0.0.1:8000/api/generate_quiz/<topic_id>/"
          """

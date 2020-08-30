@@ -21,7 +21,7 @@ export class NewQuizService {
 
   generateQuiz(quizSettings): any {
     const payload = JSON.stringify({no_of_questions: quizSettings['noOfQuestions'], no_of_choices: quizSettings['noOfChoices']});
-    this.http.post(this.generateQuizUrl + `/${quizSettings['topicId']}/`, payload, this.generateHttpHeaders()).subscribe(
+    this.http.put(this.generateQuizUrl + `${quizSettings['topicId']}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         console.log('Success', data);
         this.quiz = data;

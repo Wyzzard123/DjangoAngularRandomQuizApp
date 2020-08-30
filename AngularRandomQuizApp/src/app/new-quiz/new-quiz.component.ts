@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {NewQuizService} from "../new-quiz.service";
+import {UserService} from "../user.service";
 
 @Component({
   selector: 'app-new-quiz',
@@ -7,21 +8,22 @@ import {NewQuizService} from "../new-quiz.service";
   styleUrls: ['./new-quiz.component.css']
 })
 export class NewQuizComponent implements OnInit {
-  constructor(public _newQuiz: NewQuizService) { }
+  constructor(public _newQuiz: NewQuizService, public _userService: UserService) { }
 
   public quizSettings: any;
 
 
   ngOnInit(): void {
+    // Set quiz settings.
     this.quizSettings = {
-      topic: 0,
-      no_of_questions: 0,
-      no_of_choices: 0,
+      topicId: 5,
+      noOfQuestions: 0,
+      noOfChoices: 0,
     };
   }
 
   generateQuiz(): any {
-    this._newQuiz.generateQuiz(this.quizSettings)
+    this._newQuiz.generateQuiz(this.quizSettings);
   }
 
 }
