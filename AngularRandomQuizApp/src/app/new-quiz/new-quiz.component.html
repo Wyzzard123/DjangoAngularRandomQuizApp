@@ -28,30 +28,39 @@
   </div>
 
 
-<!--  Generated Quiz -->
-<!--  <form *ngIf="_newQuiz.quiz" (submit)="onSubmit($event)" action="{{checkAnswerUrl}}" method="post">-->
-<!--    <div *ngFor="let question of _newQuiz.quiz.questions">-->
-<!--      <div class="col-12">-->
-<!--        <p>{{question.question_text}}</p>-->
-<!--        <div *ngFor="let choice of question.choices">-->
-<!--          <input type="{{question.question_type}}" name="{{question.question_text}}" value="{{choice}}" ngModel><label>{{choice}}</label>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">-->
-<!--      <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;-->
-<!--    </div>-->
+  <!--  Generated Quiz -->
+  <!--  <form *ngIf="_newQuiz.quiz" (submit)="onSubmit($event)" action="{{checkAnswerUrl}}" method="post">-->
+  <!--    <div *ngFor="let question of _newQuiz.quiz.questions">-->
+  <!--      <div class="col-12">-->
+  <!--        <p>{{question.question_text}}</p>-->
+  <!--        <div *ngFor="let choice of question.choices">-->
+  <!--          <input type="{{question.question_type}}" name="{{question.question_text}}" value="{{choice}}" ngModel><label>{{choice}}</label>-->
+  <!--        </div>-->
+  <!--      </div>-->
+  <!--    </div>-->
+  <!--    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">-->
+  <!--      <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;-->
+  <!--    </div>-->
 
-<!--  </form>-->
+  <!--  </form>-->
 
 
   <!--  Generated Quiz -->
-  <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()" >
+  <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit($event)">
     <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.controls.qna.value; let i=index">
-      <div class="col-12" [formGroupName]="i">
+      <div class="col-12">
         <p>{{i + 1}}. {{qna.question}}</p>
+        <div [formGroupName]="i">
+        <div formArrayName="choices">
         <div *ngFor="let choice of qna.choices; let j=index">
-          <input [type]="qna.questionType" name="{{qna.question}}" value="{{choice}}" ><label>{{choice}}</label>
+          <div [formGroupName]="j">
+<!--            TODO - This is not binding to the selected variable. When checked, the form control gets changed to 'false' (string) instead of false (boolean). It also can't be changed back.-->
+            <input [type]="qna.questionType" formControlName="selected" [value]="choice.choiceText" [checked]="choice.selected" (change)="onSelect(i, j, $event.target)"><label>{{choice.choiceText}}</label>
+<!--            <input [type]="qna.questionType" name="{{qna.question}}" value="{{choice.choiceText}}"-->
+<!--                   formControlName="selected" (change)="choice.selected = !choice.selected" [checked]="choice.selected"><label>{{choice.choiceText}}</label>-->
+          </div>
+          </div>
+        </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {NewQuizService} from "../new-quiz.service";
 import {UserService} from "../user.service";
-import {FormGroup, FormArray, FormBuilder} from "@angular/forms";
+import {FormGroup, FormArray, FormBuilder, FormControl} from "@angular/forms";
 import {environment} from '../../environments/environment';
 
 @Component({
@@ -27,4 +27,13 @@ export class NewQuizComponent implements OnInit {
     this._newQuiz.generateQuiz(this.quizSettings);
   }
 
+  //The form control we are changing
+  activeFormControl: FormControl;
+
+  onSelect(i, j, target) {
+    console.log(i, j, target);
+    this.activeFormControl = this._newQuiz.quizForm['qna'][i]['choices'][j]['selected'] as FormControl;
+    console.log(this.activeFormControl)
+    this.activeFormControl.patchValue(target.checked ? target.value : '');
+  }
 }

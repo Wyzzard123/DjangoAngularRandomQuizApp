@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {UserService} from './user.service';
 import {environment} from '../environments/environment';
-import {FormArray, FormBuilder, FormGroup} from "@angular/forms";
+import {FormArray, FormBuilder, FormControl, FormGroup} from "@angular/forms";
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +50,7 @@ export class NewQuizService {
     );
   }
 
+
   createQuizForm(quiz) {
     //Patch value allows us to update only some values.
     this.quizForm.patchValue({
@@ -66,7 +67,8 @@ export class NewQuizService {
       });
       const questionGroupChoices = questionGroup.get("choices") as FormArray;
       for (const choice of question.choices) {
-        questionGroupChoices.push(this.fb.control(choice));
+        // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
+        questionGroupChoices.push(this.fb.group({choiceText: choice, selected: false}));
       }
       qnaField.push(questionGroup);
     }
@@ -109,8 +111,9 @@ export class NewQuizService {
     this.choices.removeAt(i);
   }
 
-  onSubmit() {
-    console.log(this.quizForm.value)
+  onSubmit(event) {
+    console.log(this.quizForm.value, event);
+
   }
 
 }
