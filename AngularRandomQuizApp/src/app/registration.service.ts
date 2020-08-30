@@ -12,7 +12,7 @@ export class RegistrationService {
   // Error messages received from the login attempt.
   public errors: any = [];
 
-  // If true, we will show the register screen.
+  // If true, we will show the register screen. Otherwise, we will ask if the user wants to register another account.
   public registrationScreenActive: boolean;
 
   constructor(private http: HttpClient) {
