@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {environment} from "../environments/environment";
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {environment} from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -46,14 +46,11 @@ export class UserService {
     const payload = `grant_type=password&username=${user.username}&password=${user.password}&client_id=${environment.CLIENT_ID}`;
     this.http.post('http://localhost:8000/o/token/', payload, this.httpOptions).subscribe(
       data => {
-        console.log('Login Succeeded', data);
-        // this.expiryDate = Date.now() + parseInt(data.expires_in);
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
+        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
       },
       err => {
-        console.error('Login Error', err);
-        this.errors = err['error'];
+        this.errors = err.error;
       }
     );
   }
@@ -67,11 +64,11 @@ export class UserService {
         console.log('Token Refresh Succeeded', data);
         // this.expiryDate = Date.now() + parseInt(data.expires_in);
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
+        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
       },
       err => {
         console.error('Refresh Error', err);
-        this.errors = err['error'];
+        this.errors = err.error;
       }
     );
   }
