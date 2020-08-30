@@ -50,7 +50,7 @@ export class UserService {
     this.http.post(this.tokenUrl, payload, this.httpOptions).subscribe(
       data => {
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
+        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
       },
       err => {
         this.errors = err.error;
@@ -67,7 +67,7 @@ export class UserService {
         console.log('Token Refresh Succeeded', data);
         // this.expiryDate = Date.now() + parseInt(data.expires_in);
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
+        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
       },
       err => {
         console.error('Refresh Error', err);
