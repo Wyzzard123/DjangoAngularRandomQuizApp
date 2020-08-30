@@ -1,29 +1,64 @@
 <div *ngIf="_userService.token">
   <h2>Quiz options</h2>
   <div class="row">
-<!--    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">-->
-<!--      Create select with different topics as options-->
-<!--      <label>Topic:</label><br/>-->
-<!--      <select name="Quiz Topic" [(ngModel)]="quizSettings.topic">-->
-<!--        <option value="1">1</option>-->
-<!--      </select>-->
-<!--      <span *ngFor="let error of _registrationService.errors.username"><br/>{{ error }}</span>-->
-<!--    </div>-->
+    <!--    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">-->
+    <!--      Create select with different topics as options-->
+    <!--      <label>Topic:</label><br/>-->
+    <!--      <select name="Quiz Topic" [(ngModel)]="quizSettings.topic">-->
+    <!--        <option value="1">1</option>-->
+    <!--      </select>-->
+    <!--      <span *ngFor="let error of _registrationService.errors.username"><br/>{{ error }}</span>-->
+    <!--    </div>-->
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Questions:</label><br/>
       <input type="number" name="no-of-questions" [(ngModel)]="quizSettings.noOfQuestions">
-<!--      <span *ngFor="let error of _registrationService.errors.password"><br/>{{ error }}</span>-->
+      <!--      <span *ngFor="let error of _registrationService.errors.password"><br/>{{ error }}</span>-->
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Choices:</label><br/>
       <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices">
-<!--      <span *ngFor="let error of _registrationService.errors.confirmPassword"><br/>{{ error }}</span>-->
+      <!--      <span *ngFor="let error of _registrationService.errors.confirmPassword"><br/>{{ error }}</span>-->
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
       <button (click)="generateQuiz()" class="btn btn-primary">Generate Quiz</button>&nbsp;
     </div>
-<!--    <div class="col-sm-12">-->
-<!--      <span *ngFor="let error of _registrationService.errors.non_field_errors">{{ error }}<br/></span>-->
-<!--    </div>-->
+    <!--    <div class="col-sm-12">-->
+    <!--      <span *ngFor="let error of _registrationService.errors.non_field_errors">{{ error }}<br/></span>-->
+    <!--    </div>-->
   </div>
+
+
+<!--  Generated Quiz -->
+<!--  <form *ngIf="_newQuiz.quiz" (submit)="onSubmit($event)" action="{{checkAnswerUrl}}" method="post">-->
+<!--    <div *ngFor="let question of _newQuiz.quiz.questions">-->
+<!--      <div class="col-12">-->
+<!--        <p>{{question.question_text}}</p>-->
+<!--        <div *ngFor="let choice of question.choices">-->
+<!--          <input type="{{question.question_type}}" name="{{question.question_text}}" value="{{choice}}" ngModel><label>{{choice}}</label>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">-->
+<!--      <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;-->
+<!--    </div>-->
+
+<!--  </form>-->
+
+
+  <!--  Generated Quiz -->
+  <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()" >
+    <div *ngFor="let question of _newQuiz.quiz.questions">
+      <div class="col-12">
+        <p>{{question.question_text}}</p>
+        <div *ngFor="let choice of question.choices">
+          <input type="{{question.question_type}}" name="{{question.question_text}}" value="{{choice}}" ><label>{{choice}}</label>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
+      <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;
+    </div>
+
+  </form>
 </div>
+
