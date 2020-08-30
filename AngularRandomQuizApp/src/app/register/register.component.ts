@@ -30,4 +30,11 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+  reactivateRegistrationScreen(): any {
+    this.newUser.username = '';
+    this.newUser.password = '';
+    this.newUser.confirmPassword = '';
+    this._registrationService.activateRegistrationScreen();
+  }
+
 }

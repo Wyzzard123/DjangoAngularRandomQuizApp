@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {environment} from "../environments/environment";
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,9 @@ export class RegistrationService {
   public registrationSuccessMessage: string;
   // Error messages received from the login attempt.
   public errors: any = [];
+
+   // The API URL to get a token (eg http://localhost:8000/o/token)
+  public registerUrl = `${environment.API_URL}/register/`;
 
   // If true, we will show the register screen. Otherwise, we will ask if the user wants to register another account.
   public registrationScreenActive: boolean;
@@ -39,10 +43,11 @@ export class RegistrationService {
     // Note that if the payload is not in this format and the Content-Type is not 'application/x-www-form-urlencoded',
     //  the requests might not work. work.
     const payload = `username=${user.username}&password=${user.password}`;
-    this.http.post('http://127.0.0.1:8000/register/', payload, this.httpOptions).subscribe(
+    this.http.post(this.registerUrl, payload, this.httpOptions).subscribe(
       data => {
         console.log('Registration Succeeded', data);
         this.registrationSuccessMessage = 'Registration successful!';
+
         this.deactivateRegistrationScreen();
       },
       err => {
