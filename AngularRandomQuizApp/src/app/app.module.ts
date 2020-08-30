@@ -7,12 +7,14 @@ import { LoginComponent } from './login/login.component';
 import {FormsModule} from "@angular/forms";
 import {HttpClientModule} from "@angular/common/http";
 import { RegisterComponent } from './register/register.component';
+import { NewQuizComponent } from './new-quiz/new-quiz.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    RegisterComponent
+    RegisterComponent,
+    NewQuizComponent
   ],
   imports: [
     BrowserModule,
