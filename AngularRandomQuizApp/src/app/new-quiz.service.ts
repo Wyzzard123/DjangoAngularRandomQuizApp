@@ -24,9 +24,7 @@ export class NewQuizService {
       // To get the entire quiz
       this.quizForm = this.fb.group({
         id: '',
-        qna: this.fb.array([
-          this.questionForm
-        ])
+        qna: this.fb.array([])
       });
   }
 
@@ -72,7 +70,11 @@ export class NewQuizService {
       }
       qnaField.push(questionGroup);
     }
-    console.log(this.quizForm.value)
+    console.log(this.quizForm.value);
+    console.log(this.quizForm.controls.qna.value)
+    console.log(this.quizForm.controls.qna.value[0])
+    console.log(this.quizForm.controls.qna.value[1])
+    console.log(this.quizForm.controls.qna.value[2])
   }
 
   // Generating HTTP Headers dynamically so that we can access the token in userservice.
@@ -85,6 +87,9 @@ export class NewQuizService {
     };
   }
 
+  get qna(): FormArray {
+    return this.quizForm.get("qna") as FormArray;
+  }
 
   get choices(): FormArray {
     return this.questionForm.get("choices") as FormArray

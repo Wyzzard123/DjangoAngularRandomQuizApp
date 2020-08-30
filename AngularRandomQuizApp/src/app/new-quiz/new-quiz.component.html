@@ -47,11 +47,11 @@
 
   <!--  Generated Quiz -->
   <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()" >
-    <div *ngFor="let question of _newQuiz.quiz.questions">
-      <div class="col-12">
-        <p>{{question.question_text}}</p>
-        <div *ngFor="let choice of question.choices">
-          <input type="{{question.question_type}}" name="{{question.question_text}}" value="{{choice}}" ><label>{{choice}}</label>
+    <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.controls.qna.value; let i=index">
+      <div class="col-12" [formGroupName]="i">
+        <p>{{i + 1}}. {{qna.question}}</p>
+        <div *ngFor="let choice of qna.choices; let j=index">
+          <input [type]="qna.questionType" name="{{qna.question}}" value="{{choice}}" ><label>{{choice}}</label>
         </div>
       </div>
     </div>
