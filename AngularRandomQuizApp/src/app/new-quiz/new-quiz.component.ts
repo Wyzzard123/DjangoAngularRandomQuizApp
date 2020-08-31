@@ -30,10 +30,12 @@ export class NewQuizComponent implements OnInit {
   //The form control we are changing
   activeFormControl: FormControl;
 
-  onSelect(i, j, target) {
+  onSelect(i, j, target, choice) {
     console.log(i, j, target);
-    this.activeFormControl = this._newQuiz.quizForm['qna'][i]['choices'][j]['selected'] as FormControl;
-    console.log(this.activeFormControl)
-    this.activeFormControl.patchValue(target.checked ? target.value : '');
+    console.log(this._newQuiz.quizForm)
+    console.log(choice)
+    // this.activeFormControl = this._newQuiz.quizForm['qna'][i]['choices'][j]['selected'] as FormControl;
+    // console.log(this.activeFormControl)
+    // this.activeFormControl.patchValue(target.checked ? target.value : '');
   }
 }

@@ -72,11 +72,15 @@ export class NewQuizService {
       }
       qnaField.push(questionGroup);
     }
-    console.log(this.quizForm.value);
-    console.log(this.quizForm.controls.qna.value)
-    console.log(this.quizForm.controls.qna.value[0])
-    console.log(this.quizForm.controls.qna.value[1])
-    console.log(this.quizForm.controls.qna.value[2])
+    console.log(this.quizForm)
+    console.log(this.quizForm.controls.qna)
+    console.log(this.quizForm.get('qna')['controls'])
+    // console.log(this.quizForm.controls)
+    // console.log(this.quizForm.value);
+    // console.log(this.quizForm.controls.qna.value)
+    // console.log(this.quizForm.controls.qna.value[0])
+    // console.log(this.quizForm.controls.qna.value[1])
+    // console.log(this.quizForm.controls.qna.value[2])
   }
 
   // Generating HTTP Headers dynamically so that we can access the token in userservice.

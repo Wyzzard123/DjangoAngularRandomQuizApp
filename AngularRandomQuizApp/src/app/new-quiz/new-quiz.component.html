@@ -47,18 +47,16 @@
 
   <!--  Generated Quiz -->
   <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit($event)">
-    <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.controls.qna.value; let i=index">
+    <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.get('qna')['controls']; let i=index">
       <div class="col-12">
-        <p>{{i + 1}}. {{qna.question}}</p>
+        <p>{{i + 1}}. {{qna.value.question}}</p>
         <div [formGroupName]="i">
-        <div formArrayName="choices">
-        <div *ngFor="let choice of qna.choices; let j=index">
+        <div formArrayName="choices" *ngFor="let choice of qna.get('choices')['controls']; let j=index">
           <div [formGroupName]="j">
 <!--            TODO - This is not binding to the selected variable. When checked, the form control gets changed to 'false' (string) instead of false (boolean). It also can't be changed back.-->
-            <input [type]="qna.questionType" formControlName="selected" [value]="choice.choiceText" [checked]="choice.selected" (change)="onSelect(i, j, $event.target)"><label>{{choice.choiceText}}</label>
+            <input [type]="qna.value.questionType" [name]="qna.value.question" formControlName="selected" [value]="choice.value.choiceText" [checked]="choice.value.selected" (change)="onSelect(i, j, $event.target, choice)"><label>{{choice.value.choiceText}}</label>
 <!--            <input [type]="qna.questionType" name="{{qna.question}}" value="{{choice.choiceText}}"-->
 <!--                   formControlName="selected" (change)="choice.selected = !choice.selected" [checked]="choice.selected"><label>{{choice.choiceText}}</label>-->
-          </div>
           </div>
         </div>
         </div>
