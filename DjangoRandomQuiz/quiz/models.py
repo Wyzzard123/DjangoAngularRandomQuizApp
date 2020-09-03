@@ -192,6 +192,7 @@ class Topic(UUIDAndTimeStampAbstract):
             quiz=quiz,
         )
         quiz_object.quiz.update({'id': quiz_object.id})
+        quiz_object.save()
         return quiz_object
 
 
@@ -349,9 +350,12 @@ class Quiz(UUIDAndTimeStampAbstract):
                 # If the correct answer was chosen, add to the score.
                 if is_correct and chosen:
                     no_of_correct_answers += 1
-                # Otherwise, if the correct answer was not chosen or if the answer was chosen and false, add to the
-                #  no of wrong answers.
-                else:
+                # Otherwise, if the correct answer was not chosen, add to the
+                #  no of wrong answers. We will not add to the no of wrong answers for an answer that the person chose
+                #  that was not part of the answers, as this would mean adopting a negative scoring system where you
+                #  are doubly penalized for choosing the wrong answer.
+                # In other words, the no of wrong answers is more like the no of unchosen answers.
+                elif is_correct and not chosen:
                     no_of_wrong_answers += 1
             attempt_dict_questions_list.append(updated_dict_question)
 

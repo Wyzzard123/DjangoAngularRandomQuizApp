@@ -66,6 +66,10 @@ class QuizViewSet(viewsets.ViewSet):
         """Only search questions from what the user has created."""
         return Question.objects.filter(creator=self.request.user)
 
+    def quiz_queryset(self):
+        """Only search questions from what the user has created."""
+        return Quiz.objects.filter(creator=self.request.user)
+
 
 class QuestionAnswerCreateAPIView(QuizViewSet):
     """
@@ -136,6 +140,21 @@ class GenerateQuizAPIView(QuizViewSet):
     For this end point, we must pass in a topic ID. We will then get the relevant topic and generate a quiz using
     no_of_choices and no_of_questions
     """
+
+    def retrieve(self, request, pk, format=None):
+        """
+        Pass in the pk of a quiz, and we will return an older quiz. This will be used to retry quizzes.
+        """
+        try:
+            # Get the relevant topic.
+            quiz = self.quiz_queryset().get(id=pk).quiz
+        except Exception as e:
+            # Topic does not exist.
+            return Response({"Error": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(quiz, status=status.HTTP_200_OK)
+
     def update(self, request, pk, format=None):
         """
         Pass in the pk of a topic as the 'pk'. We will use this topic and return a random quiz.
@@ -162,7 +181,7 @@ class GenerateQuizAPIView(QuizViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CheckQuizAnswersAPIView(viewsets.ViewSet):
+class CheckQuizAnswersAPIView(QuizViewSet):
     """
     Takes in a list of answers and attempts to answer a quiz of a particular ID (passed in as the pk).
 

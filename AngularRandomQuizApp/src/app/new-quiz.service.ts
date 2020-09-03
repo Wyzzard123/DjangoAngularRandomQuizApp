@@ -18,32 +18,41 @@ export class NewQuizService {
 
   public quiz: any;
 
+  // The dictionary with the answers to the quiz.
+  public answerKeyAndScore: any;
+
   // Error messages received from the login attempt.
   public errors: any = [];
 
   quizForm: FormGroup;
 
-  constructor(private http: HttpClient, public _userService: UserService, private fb: FormBuilder) {
+  constructor(private http: HttpClient, public _userService: UserService, private fb: FormBuilder) { }
 
-      // To get the entire quiz
-      this.quizForm = this.fb.group({
-        id: '',
-        qna: this.fb.array([])
-      });
+  // Restart the quiz form from a blank slate.
+  resetQuiz(): any {
+    // To get the entire quiz
+    this.quizForm = this.fb.group({
+      // ID of the quiz that we are attempting.
+      id: '',
+      qna: this.fb.array([]),
+      // ID of the quiz attempt.
+      attemptId: '',
+      answered: false,
+      wrongAnswers: null,
+      correctAnswers: null,
+      score: null
+    });
   }
 
-  questionForm: FormGroup = this.fb.group({
-      question: '',
-      //Checkbox or radio
-      questionType: '',
-      choices: this.fb.array([])
-    });
 
   generateQuiz(quizSettings): any {
     const payload = JSON.stringify({no_of_questions: quizSettings['noOfQuestions'], no_of_choices: quizSettings['noOfChoices']});
     this.http.put(this.generateQuizUrl + `${quizSettings['topicId']}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         console.log('Success', data);
+
+        // Start the quiz form anew.
+        this.resetQuiz();
         // Create the quiz form
         this.createQuizForm(data);
         this.quiz = data;
@@ -54,8 +63,7 @@ export class NewQuizService {
     );
   }
 
-
-  createQuizForm(quiz) {
+  createQuizForm(quiz): any {
     //Patch value allows us to update only some values.
     this.quizForm.patchValue({
       id: quiz.id
@@ -72,28 +80,10 @@ export class NewQuizService {
       const questionGroupChoices = questionGroup.get("choices") as FormArray;
       for (const choice of question.choices) {
         // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
-        questionGroupChoices.push(this.fb.group({choiceText: choice, selected: false}));
+        questionGroupChoices.push(this.fb.group({choiceText: choice, selected: false, correct: null}));
       }
       qnaField.push(questionGroup);
     }
-  }
-
-  // Generating HTTP Headers dynamically so that we can access the token in userservice.
-  generateHttpHeaders(): any {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this._userService.token}`
-      })
-    };
-  }
-
-  get qna(): FormArray {
-    return this.quizForm.get("qna") as FormArray;
-  }
-
-  get choices(): FormArray {
-    return this.questionForm.get("choices") as FormArray
   }
 
   onSubmit() {
@@ -110,9 +100,7 @@ export class NewQuizService {
       }
       answerList.push(chosenAnswers);
     }
-    this.answerQuiz(this.quizForm.value.id, answerList)
-
-
+    this.answerQuiz(this.quizForm.value.id, answerList);
 
   }
 
@@ -122,14 +110,67 @@ export class NewQuizService {
     this.http.put(this.answerQuizUrl + `${quizId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         console.log('Success', data);
-        // Create the quiz form
-        // this.createQuizForm(data);
-        // this.quiz = data;
+        this.answerKeyAndScore = data;
+        // Set 'answered' to true.
+        this.quizForm.controls.answered.patchValue({answered: true});
+        this.showAnswers();
       },
       err => {
         this.errors = err.error;
       }
     );
+  }
+
+  showAnswers(): any {
+    const questions = this.answerKeyAndScore.questions;
+    const qnaControls = this.quizForm.get('qna')['controls']
+    const noOfQuestions = questions.length
+    this.quizForm.patchValue({
+      attemptId: this.answerKeyAndScore.id,
+      score: this.answerKeyAndScore.score,
+      correctAnswers: this.answerKeyAndScore.no_of_correct_answers,
+      wrongAnswers: this.answerKeyAndScore.no_of_wrong_answers,
+    });
+    console.log(this.quizForm);
+
+    for (let i = 0; i < noOfQuestions; i++) {
+      const qna = qnaControls[i];
+      let question = questions[i];
+      let choiceControls = qna.get('choices')['controls'];
+      let noOfChoices = choiceControls.length;
+      for (let j = 0; j < noOfChoices; j++) {
+        let choiceControl = choiceControls[j];
+        let choiceCorrect = question.choices[j].correct;
+        choiceControl.patchValue({correct: choiceCorrect});
+      }
+    }
+  }
+
+  retryQuiz(quizId): any {
+    this.http.get(this.generateQuizUrl + `${quizId}/`, this.generateHttpHeaders()).subscribe(
+      data => {
+        console.log('Success', data);
+
+        // Start the quiz form anew.
+        this.resetQuiz();
+        // Create the quiz form
+        this.createQuizForm(data);
+        this.quiz = data;
+      },
+      err => {
+        this.errors = err.error;
+      }
+    );
+  }
+
+  // Generating HTTP Headers dynamically so that we can access the token in userservice.
+  generateHttpHeaders(): any {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this._userService.token}`
+      })
+    };
   }
 
 }

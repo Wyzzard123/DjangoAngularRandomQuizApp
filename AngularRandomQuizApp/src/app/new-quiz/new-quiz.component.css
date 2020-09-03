@@ -1,0 +1,15 @@
+.correct {
+  color: green;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.wrong {
+  color: red;
+}
+
+.correct-unchosen {
+  color: red;
+  font-weight: bold;
+  font-style: italic;
+}
