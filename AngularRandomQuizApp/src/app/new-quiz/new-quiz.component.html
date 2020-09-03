@@ -47,15 +47,16 @@
 
   <!--  Generated Quiz -->
   <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()">
+    <ol style="padding-inline-start: 0">
     <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.get('qna')['controls']; let i=index">
       <div class="col-12">
-        <p>{{i + 1}}. {{qna.value.question}}</p>
+        <li>{{qna.value.question}}</li>
         <div [formGroupName]="i">
         <div formArrayName="choices" *ngFor="let choice of qna.get('choices')['controls']; let j=index">
           <div [formGroupName]="j">
             <input *ngIf="qna.value.questionType == 'checkbox'" [type]="qna.value.questionType" [name]= "qna.value.question" formControlName="selected" [value]="choice.value.selected" (change)="onSelectCheckbox(choice)">
             <input *ngIf="qna.value.questionType == 'radio'" [type]="qna.value.questionType" [name]= "qna.value.question" formControlName="selected" [value]="choice.value.selected"  (change)="onSelectRadio(qna, choice)">
-            <label>{{choice.value.choiceText}}</label>
+            <label style="padding-left: 10px">{{choice.value.choiceText}}</label>
           </div>
         </div>
         </div>
@@ -64,7 +65,7 @@
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
       <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;
     </div>
-
+    </ol>
   </form>
 </div>
 
