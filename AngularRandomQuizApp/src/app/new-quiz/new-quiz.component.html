@@ -4,7 +4,6 @@
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Questions:</label><br/>
       <input type="number" name="no-of-questions" [(ngModel)]="quizSettings.noOfQuestions">
-      <!--      <span *ngFor="let error of _registrationService.errors.password"><br/>{{ error }}</span>-->
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Choices:</label><br/>
@@ -49,13 +48,30 @@
 
     </ol>
   </form>
-  <div class="row mt-4">
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2"
-         *ngIf="_newQuiz.quiz && _newQuiz.quizForm.value.answered">
-      <button (click)="generateQuiz()" class="btn btn-primary">Re-Generate Quiz</button>
+  <!--  Score and regenerate quiz buttons. These only appear when the quiz has been answered. -->
+  <div *ngIf="_newQuiz.quiz && _newQuiz.quizForm.value.answered">
+    <div class="row" [ngClass]="{'correct': _newQuiz.quizForm.value.score >= 0.5, 'correct-unchosen':  _newQuiz.quizForm.value.score < 0.5}">
+      <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
+        Score: {{_newQuiz.quizForm.value.correctAnswers}}
+        / {{_newQuiz.quizForm.value.wrongAnswers + _newQuiz.quizForm.value.correctAnswers}}
+      </div>
+        <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
+<!--        '1.2-2' means {minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}:
+
+A minimum of 1 digit will be shown before decimal point
+It will show at least 2 digits after decimal point
+But not more than 2 digits -->
+        Percentage: {{ _newQuiz.quizForm.value.score * 100 | number: '1.2-2'}} %<br>
+      </div>
     </div>
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="_newQuiz.quiz && _newQuiz.quizForm.value.answered">
-      <button (click)="_newQuiz.retryQuiz(_newQuiz.quizForm.value.id)" class="btn btn-primary">Retry Same Quiz</button>
+    <div class="row">
+      <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+        <button (click)="generateQuiz()" class="btn btn-primary">Re-Generate Quiz</button>
+      </div>
+      <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+        <button (click)="_newQuiz.retryQuiz(_newQuiz.quizForm.value.id)" class="btn btn-primary">Retry Same Quiz
+        </button>
+      </div>
     </div>
   </div>
 </div>
