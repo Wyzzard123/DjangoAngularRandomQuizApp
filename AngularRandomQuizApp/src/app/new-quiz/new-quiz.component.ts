@@ -27,15 +27,25 @@ export class NewQuizComponent implements OnInit {
     this._newQuiz.generateQuiz(this.quizSettings);
   }
 
-  //The form control we are changing
-  activeFormControl: FormControl;
+  onSelectCheckbox(choice): any {
+    // If we select a checkbox, change the value to from true to false if it was already selected and vice versa.
+    choice.patchValue({selected: !this.str_to_boolean(choice.value.selected)});
+  }
 
-  onSelect(i, j, target, choice) {
-    console.log(i, j, target);
-    console.log(this._newQuiz.quizForm)
-    console.log(choice)
-    // this.activeFormControl = this._newQuiz.quizForm['qna'][i]['choices'][j]['selected'] as FormControl;
-    // console.log(this.activeFormControl)
-    // this.activeFormControl.patchValue(target.checked ? target.value : '');
+  onSelectRadio(qna: any, choice: any): any {
+    // If we select a radio button, set selected for the currently clicked radio button to true and on all the others to
+    // false.
+    for (const otherChoice of qna.get('choices')['controls']) {
+      if (otherChoice.value.choiceText === choice.value.choiceText) {
+        choice.patchValue({selected: true});
+      }
+      else {
+        otherChoice.patchValue({selected: false});
+      }
+    }
+  }
+
+  str_to_boolean(str): boolean {
+    return str === 'true';
   }
 }

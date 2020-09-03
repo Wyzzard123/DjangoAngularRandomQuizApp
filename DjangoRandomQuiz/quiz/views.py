@@ -176,7 +176,7 @@ class CheckQuizAnswersAPIView(viewsets.ViewSet):
         """Only search topics from what the user has created."""
         return Quiz.objects.filter(creator=self.request.user)
 
-    def retrieve(self, request, pk):
+    def update(self, request, pk):
         """
         Pass in the pk of a quiz as the 'pk'. We will attempt this particular quiz and return the attempt dictionary.
 
