@@ -46,6 +46,8 @@ export class NewQuizComponent implements OnInit {
   }
 
   str_to_boolean(str): boolean {
+    // We need to use str_to_boolean because the value we get from 'choice.value.selected' when we select the checkbox
+    // is always a string "false" for some reason.
     return str === 'true';
   }
 }
