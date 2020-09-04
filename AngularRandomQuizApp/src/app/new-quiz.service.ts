@@ -123,8 +123,8 @@ export class NewQuizService {
 
   showAnswers(): any {
     const questions = this.answerKeyAndScore.questions;
-    const qnaControls = this.quizForm.get('qna')['controls']
-    const noOfQuestions = questions.length
+    const qnaControls = this.quizForm.get('qna')['controls'];
+    const noOfQuestions = questions.length;
     this.quizForm.patchValue({
       attemptId: this.answerKeyAndScore.id,
       score: this.answerKeyAndScore.score,
@@ -135,12 +135,12 @@ export class NewQuizService {
 
     for (let i = 0; i < noOfQuestions; i++) {
       const qna = qnaControls[i];
-      let question = questions[i];
-      let choiceControls = qna.get('choices')['controls'];
-      let noOfChoices = choiceControls.length;
+      const question = questions[i];
+      const choiceControls = qna.get('choices')['controls'];
+      const noOfChoices = choiceControls.length;
       for (let j = 0; j < noOfChoices; j++) {
-        let choiceControl = choiceControls[j];
-        let choiceCorrect = question.choices[j].correct;
+        const choiceControl = choiceControls[j];
+        const choiceCorrect = question.choices[j].correct;
         choiceControl.patchValue({correct: choiceCorrect});
       }
     }
