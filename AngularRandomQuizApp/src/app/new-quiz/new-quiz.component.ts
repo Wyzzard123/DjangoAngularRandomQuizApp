@@ -11,6 +11,10 @@ import {HttpClient} from "@angular/common/http";
   styleUrls: ['./new-quiz.component.css']
 })
 export class NewQuizComponent implements OnInit {
+  // If we are in editTopicMode, we can edit a particular topic.
+  public editTopicMode = false;
+  public editTopicName: null;
+
   constructor(public _newQuiz: NewQuizService, public _userService: UserService, private http: HttpClient) { }
 
   public quizSettings: any;
@@ -22,6 +26,7 @@ export class NewQuizComponent implements OnInit {
   // Error messages received
   public errors: any = [];
 
+
   ngOnInit(): void {
     // Set quiz settings.
     this.quizSettings = {
@@ -32,7 +37,7 @@ export class NewQuizComponent implements OnInit {
     };
   }
 
-  getTopics(overwriteTopics = false): any {
+  getTopics(overwriteTopics = true): any {
     // Update the topics if we either have no topics available or if we have chosen to overwrite the current topics.
     if (!this.topics || overwriteTopics) {
       this.updateTopics();
@@ -99,4 +104,66 @@ export class NewQuizComponent implements OnInit {
     // is always a string "false" for some reason.
     return str === 'true';
   }
+
+  toggleEditTopicMode() {
+    this.editTopicMode = !this.editTopicMode;
+    // this.quizSettings.topicName =
+    console.log(this.quizSettings.topicName)
+    console.log(this.editTopicMode)
+  }
+
+  editTopic() {
+    const httpHeaders = this._newQuiz.generateHttpHeaders();
+    const payload = JSON.stringify({name: this.editTopicName});
+
+    this.http.put(`${this.topicsAPIUrl}${this.quizSettings.topicId}/`, payload, httpHeaders).subscribe(
+        data => {
+          // Reset errors.
+          this.errors = [];
+          console.log('Success', data);
+          // Get topics again and overwrite the current topic list.
+          this.getTopics(true);
+
+          // Set the selected topic as the one we just updated.
+          this.quizSettings.topicId = data.id;
+
+          // Turn off edit Topic Mode.
+          this.editTopicMode = false;
+        },
+        err => {
+          this.errors = err.error;
+        }
+      );
+  }
+
+  deleteTopic() {
+    const httpHeaders = this._newQuiz.generateHttpHeaders();
+    this.http.delete(`${this.topicsAPIUrl}${this.quizSettings.topicId}/`, httpHeaders).subscribe(
+        data => {
+          // Reset errors.
+          this.errors = [];
+          console.log('Success', data);
+          // Get topics again and overwrite the current topic list.
+          this.getTopics(true);
+
+          // Set the selected topic as the one we just updated.
+          this.quizSettings.topicId = 0;
+
+          // Turn off edit Topic Mode.
+          this.editTopicMode = false;
+        },
+        err => {
+          this.errors = err.error;
+        }
+      );
+
+  }
+
+  onSelectTopic($event: Event) {
+    console.log($event);
+    this.editTopicName = $event.target.options[$event.target.options.selectedIndex].innerText;
+    console.log(this.editTopicName );
+  }
+
+
 }
