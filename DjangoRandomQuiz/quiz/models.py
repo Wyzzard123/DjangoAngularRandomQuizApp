@@ -111,6 +111,8 @@ class Topic(UUIDAndTimeStampAbstract):
         For each question, if the max number of answers is more than one, the question will be a checkbox (multiple choices)
         instead of a radio button (one choice).
         """
+        # TODO - Handle the case where the topic has no questions.
+
         # Get quiz topic
         quiz_topic = self
 

@@ -9,13 +9,13 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope
 from rest_framework.response import Response
 
-from quiz.mixins import NoUpdateCreatorMixin
+from quiz.mixins import NoUpdateCreatorMixin, UserDataBasedOnRequestMixin
 from quiz.models import Topic, Question, Answer, Quiz
 from quiz.serializers import TopicSerializer, QuestionSerializer, AnswerSerializer, UserSerializer, \
     QuestionAnswerSerializer, QuizSerializer, QuizAnswerSerializer
 
 
-class TopicAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
+class TopicAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL topics belonging to a user"""
     serializer_class = TopicSerializer
 
@@ -26,7 +26,7 @@ class TopicAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
         return Topic.objects.filter(creator=user)
 
 
-class QuestionAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
+class QuestionAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL questions belonging to a user"""
     serializer_class = QuestionSerializer
 
@@ -38,7 +38,7 @@ class QuestionAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
         return Question.objects.filter(creator=user)
 
 
-class AnswerAPIView(NoUpdateCreatorMixin, viewsets.ModelViewSet):
+class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL answers belonging to a user"""
     serializer_class = AnswerSerializer
 
@@ -217,9 +217,6 @@ class CheckQuizAnswersAPIView(QuizViewSet):
             return Response(quiz_attempt, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
 
 
 class UserCreateView(generics.CreateAPIView):
