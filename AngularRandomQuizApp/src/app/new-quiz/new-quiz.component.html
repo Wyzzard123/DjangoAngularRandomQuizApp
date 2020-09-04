@@ -29,6 +29,9 @@
     </div>
 
   </div>
+  <div *ngIf="_newQuiz.errors" class="text-danger">
+    <strong>{{ _newQuiz.errors.error_description }}</strong>
+  </div>
   <!--  Generated Quiz -->
   <form id="quiz" [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()">
     <ol style="padding-inline-start: 0">

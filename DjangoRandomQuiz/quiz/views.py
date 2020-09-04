@@ -168,14 +168,19 @@ class GenerateQuizAPIView(QuizViewSet):
             topic = self.topic_queryset().get(id=pk)
         except Exception as e:
             # Topic does not exist.
-            return Response({"Error": "Topic Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error_description": "Topic does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not topic.questions.all():
+            return Response({"error_description": "Topic has no questions. Add some questions to the topic first."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         serializer = QuizSerializer(data=request.data)
 
         if serializer.is_valid():
             no_of_questions = serializer.validated_data['no_of_questions']
             no_of_choices = serializer.validated_data['no_of_choices']
-            randomly_generated_quiz = topic.generate_quiz(no_of_questions=no_of_questions, no_of_choices=no_of_choices).quiz
+            randomly_generated_quiz = topic.generate_quiz(no_of_questions=no_of_questions,
+                                                          no_of_choices=no_of_choices).quiz
             return Response(randomly_generated_quiz, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

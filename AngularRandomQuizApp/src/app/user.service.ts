@@ -92,6 +92,7 @@ export class UserService {
     this.username = userName;
     this.token = accessToken;
     this.refreshToken = refreshToken;
+    this.errors = [];
   }
 
 

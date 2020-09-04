@@ -51,8 +51,12 @@ export class NewQuizService {
     const payload = JSON.stringify({no_of_questions: quizSettings.noOfQuestions, no_of_choices: quizSettings.noOfChoices});
     this.http.put(this.generateQuizUrl + `${quizSettings.topicId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
+        // Reset errors.
+        this.errors = [];
         console.log('Success', data);
-
+        // if (!data) {
+        //
+        // }
         // Start the quiz form anew.
         this.resetQuiz();
         // Create the quiz form
@@ -64,6 +68,7 @@ export class NewQuizService {
 
       },
       err => {
+        console.log('This is the error', err)
         this.errors = err.error;
       }
     );
