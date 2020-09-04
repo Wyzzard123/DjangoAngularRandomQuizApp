@@ -154,7 +154,8 @@ class Topic(UUIDAndTimeStampAbstract):
                 # We have to calibrate the number of correct answers based on the max number of wrong choices. If we have
                 #  too few possible wrong choices, we cannot have too few correct answers.
                 max_no_of_wrong_choices = len(possible_wrong_choices)
-                min_no_of_correct_answers = no_of_choices - max_no_of_wrong_choices
+                # We will make sure to have at least one correct answer.
+                min_no_of_correct_answers = max(1, no_of_choices - max_no_of_wrong_choices)
 
                 # The number of correct answers cannot be higher than the number of choices, but it also cannot be higher
                 #  than the total number of possible correct answers.
@@ -326,18 +327,40 @@ class Quiz(UUIDAndTimeStampAbstract):
         no_of_correct_answers = 0
         no_of_wrong_answers = 0
 
+        # The total possible score will be the total of all the number of correct answers.
+        possible_points = 0
+
+        # The total score for the quiz.
+        # Answering a radio question correctly gives 1 / 1 points. Answering wrongly gives 0 points.
+        # Choosing a wrong checkbox question answer will subtract 1 from the points that were scored for that question
+        #  with a minimum of 0 points.
+        total_points_scored = 0
+
         # For "questions": [{...}, {...}]... (See docstring)
         attempt_dict_questions_list = []
         for question, chosen_answer_set in zip(questions, chosen_answers):
             question_text = question['question_text']
+            question_type = question['question_type']
             question_model = Question.objects.get(creator=self.creator, text=question_text)
             original_choice_list = question['choices']
 
             # To be passed as a dict into the attempt_dict_questions_list.
             updated_dict_question = {'question_text': question_text,
-                                     'question_type': question['question_type'],
-                                     'choices': []
+                                     'question_type': question_type,
+                                     'choices': [],
                                      }
+
+            # Start the score counter at 0.
+
+            # The total question points without deduction
+            question_points = 0
+
+            # The total penalty.
+            penalty = 0
+
+            # The score will be the question_points - penalty with a minimum of 0.
+            question_points_scored = 0
+            possible_question_points = 0
             for choice in original_choice_list:
                 choice_text = choice
                 chosen = choice_text in chosen_answer_set
@@ -346,27 +369,51 @@ class Quiz(UUIDAndTimeStampAbstract):
                     'choice_text': choice_text,
                     'chosen': chosen,
                     'correct': is_correct,
+                    # We will also add the number of points scored per question and the possible number of points per
+                    #  question
                 })
-                # If the correct answer was chosen, add to the score.
+                if is_correct:
+                    # The possible score will increase per answer that is correct (though not necessarily chosen).
+                    possible_question_points += 1
+
                 if is_correct and chosen:
+                    # If the correct answer was chosen, add to the score.
                     no_of_correct_answers += 1
-                # Otherwise, if the correct answer was not chosen, add to the
-                #  no of wrong answers. We will not add to the no of wrong answers for an answer that the person chose
-                #  that was not part of the answers, as this would mean adopting a negative scoring system where you
-                #  are doubly penalized for choosing the wrong answer.
-                # In other words, the no of wrong answers is more like the no of unchosen answers.
+                    question_points += 1
                 elif is_correct and not chosen:
+                    # Otherwise, if the correct answer was not chosen, add to the no of wrong (unchosen) answers.
                     no_of_wrong_answers += 1
+                elif not is_correct and chosen:
+                    # However, if the wrong answer is chosen, penalize for choosing the wrong answer for checkbox type
+                    #  questions to disincentivize clicking all the checkboxes.
+                    if question_type == 'checkbox':
+                        penalty += 1
+            # Reset question score to 0 if it falls below 0.
+            question_points_scored = question_points - penalty if (question_points - penalty) >= 0 else 0
+            # Add the possible question score to the possible quiz score.
+            possible_points += possible_question_points
+            # Add the question score to the total score
+            total_points_scored += question_points_scored
+            updated_dict_question.update({
+                'question_points_scored': question_points_scored,
+                'possible_question_points': possible_question_points,
+                'question_points_before_penalty': question_points,
+                'penalty': penalty
+            })
             attempt_dict_questions_list.append(updated_dict_question)
 
-        score = no_of_correct_answers / (no_of_correct_answers + no_of_wrong_answers)
+        # The final score (which can be multiplied by 100% for percentage) is the total score divided by the possible
+        #  quiz score.
+        score = total_points_scored / possible_points
 
         quiz_attempt = {
             "topic": self.quiz["topic"],
             "questions": attempt_dict_questions_list,
             "no_of_correct_answers": no_of_correct_answers,
             "no_of_wrong_answers": no_of_wrong_answers,
-            "score": score
+            "score": score,
+            "total_points_scored": total_points_scored,
+            "possible_points": possible_points
         }
 
         quiz_attempt_object = QuizAttempt.objects.create(quiz=self, quiz_attempt=quiz_attempt, score=score)

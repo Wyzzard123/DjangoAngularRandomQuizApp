@@ -12,11 +12,9 @@
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
       <button (click)="generateQuiz()" class="btn btn-primary">Generate Quiz</button>&nbsp;
     </div>
-
   </div>
-
   <!--  Generated Quiz -->
-  <form [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()">
+  <form id="quiz" [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()">
     <ol style="padding-inline-start: 0">
       <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.get('qna')['controls']; let i=index">
         <div class="col-12">
@@ -39,21 +37,23 @@
               </div>
             </div>
           </div>
+          <div *ngIf="_newQuiz.quizForm.value.answered" [ngClass]="{'correct': (qna.value.questionPointsScored / qna.value.possibleQuestionPoints) >= 0.5, 'penalty': (qna.value.questionPointsScored / qna.value.possibleQuestionPoints) < 0.5 }">
+            Score: {{qna.value.questionPointsScored}} / {{qna.value.possibleQuestionPoints}}
+          </div>
+          <div *ngIf="qna.value.penalty > 0" class="penalty">Penalty: {{qna.value.penalty}}</div>
         </div>
       </div>
       <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="!_newQuiz.quizForm.value.answered">
         <input type="submit" value="Submit Quiz" class="btn btn-primary">&nbsp;
       </div>
-      <!--      retryQuiz-->
-
     </ol>
   </form>
   <!--  Score and regenerate quiz buttons. These only appear when the quiz has been answered. -->
   <div *ngIf="_newQuiz.quiz && _newQuiz.quizForm.value.answered">
-    <div class="row" [ngClass]="{'correct': _newQuiz.quizForm.value.score >= 0.5, 'correct-unchosen':  _newQuiz.quizForm.value.score < 0.5}">
+    <div class="row" [ngClass]="{'correct': _newQuiz.quizForm.value.score >= 0.5, 'penalty':  _newQuiz.quizForm.value.score < 0.5}">
       <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
-        Score: {{_newQuiz.quizForm.value.correctAnswers}}
-        / {{_newQuiz.quizForm.value.wrongAnswers + _newQuiz.quizForm.value.correctAnswers}}
+        Score: {{_newQuiz.quizForm.value.totalPointsScored}}
+        / {{_newQuiz.quizForm.value.possiblePoints}}
       </div>
         <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
 <!--        '1.2-2' means {minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}:

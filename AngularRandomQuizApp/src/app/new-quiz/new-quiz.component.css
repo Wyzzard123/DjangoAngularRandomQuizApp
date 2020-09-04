@@ -1,14 +1,21 @@
 .correct {
-  color: green;
+  color: darkgreen;
   font-weight: bold;
   font-style: italic;
 }
 
 .wrong {
   color: red;
+  font-weight: bold;
+  font-style: italic;
 }
 
 .correct-unchosen {
+  color: darkgreen;
+  font-style: italic;
+}
+
+.penalty {
   color: red;
   font-weight: bold;
   font-style: italic;

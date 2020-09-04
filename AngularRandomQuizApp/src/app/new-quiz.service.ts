@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {UserService} from './user.service';
 import {environment} from '../environments/environment';
-import {FormArray, FormBuilder, FormControl, FormGroup} from "@angular/forms";
+import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
@@ -40,14 +40,16 @@ export class NewQuizService {
       answered: false,
       wrongAnswers: null,
       correctAnswers: null,
-      score: null
+      score: null,
+      totalPointsScored: null,
+      possiblePoints: null,
     });
   }
 
 
   generateQuiz(quizSettings): any {
-    const payload = JSON.stringify({no_of_questions: quizSettings['noOfQuestions'], no_of_choices: quizSettings['noOfChoices']});
-    this.http.put(this.generateQuizUrl + `${quizSettings['topicId']}/`, payload, this.generateHttpHeaders()).subscribe(
+    const payload = JSON.stringify({no_of_questions: quizSettings.noOfQuestions, no_of_choices: quizSettings.noOfChoices});
+    this.http.put(this.generateQuizUrl + `${quizSettings.topicId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         console.log('Success', data);
 
@@ -56,6 +58,10 @@ export class NewQuizService {
         // Create the quiz form
         this.createQuizForm(data);
         this.quiz = data;
+
+
+        this.scrollToQuiz();
+
       },
       err => {
         this.errors = err.error;
@@ -64,23 +70,31 @@ export class NewQuizService {
   }
 
   createQuizForm(quiz): any {
-    //Patch value allows us to update only some values.
+    // Patch value allows us to update only some values.
     this.quizForm.patchValue({
       id: quiz.id
     });
 
-    const qnaField = this.quizForm.get("qna") as FormArray;
+    const qnaField = this.quizForm.get('qna') as FormArray;
 
     for (const question of quiz.questions) {
       const questionGroup = this.fb.group( {
-        "question": question.question_text,
+        question: question.question_text,
         questionType: question.question_type,
-        choices: this.fb.array([])
+        choices: this.fb.array([]),
+        questionPointsScored: null,
+        possibleQuestionPoints: null,
+        questionPointsBeforePenalty: null,
+        penalty: null
       });
-      const questionGroupChoices = questionGroup.get("choices") as FormArray;
+      const questionGroupChoices = questionGroup.get('choices') as FormArray;
       for (const choice of question.choices) {
         // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
-        questionGroupChoices.push(this.fb.group({choiceText: choice, selected: false, correct: null}));
+        questionGroupChoices.push(this.fb.group({
+          choiceText: choice,
+          selected: false,
+          correct: null,
+        }));
       }
       qnaField.push(questionGroup);
     }
@@ -101,6 +115,7 @@ export class NewQuizService {
       answerList.push(chosenAnswers);
     }
     this.answerQuiz(this.quizForm.value.id, answerList);
+    this.scrollToQuiz();
 
   }
 
@@ -121,6 +136,12 @@ export class NewQuizService {
     );
   }
 
+  scrollToQuiz(): any {
+    // TODO - Scroll to quiz when done. Right now, however, the quiz is always null the first time we try to scroll and
+    //  this means we stay still for the first click.
+    document.getElementById('quiz').scrollIntoView({behavior:'smooth'});
+  }
+
   showAnswers(): any {
     const questions = this.answerKeyAndScore.questions;
     const qnaControls = this.quizForm.get('qna')['controls'];
@@ -130,18 +151,28 @@ export class NewQuizService {
       score: this.answerKeyAndScore.score,
       correctAnswers: this.answerKeyAndScore.no_of_correct_answers,
       wrongAnswers: this.answerKeyAndScore.no_of_wrong_answers,
+      totalPointsScored: this.answerKeyAndScore.total_points_scored,
+      possiblePoints: this.answerKeyAndScore.possible_points,
     });
     console.log(this.quizForm);
 
     for (let i = 0; i < noOfQuestions; i++) {
       const qna = qnaControls[i];
       const question = questions[i];
-      const choiceControls = qna.get('choices')['controls'];
+      qna.patchValue({
+        questionPointsScored: question.question_points_scored,
+        possibleQuestionPoints: question.possible_question_points,
+        questionPointsBeforePenalty: question.question_points_before_penalty,
+        penalty: question.penalty
+      });
+      const choiceControls = qna.get('choices').controls;
       const noOfChoices = choiceControls.length;
       for (let j = 0; j < noOfChoices; j++) {
         const choiceControl = choiceControls[j];
         const choiceCorrect = question.choices[j].correct;
-        choiceControl.patchValue({correct: choiceCorrect});
+        choiceControl.patchValue({
+          correct: choiceCorrect,
+        });
       }
     }
   }
