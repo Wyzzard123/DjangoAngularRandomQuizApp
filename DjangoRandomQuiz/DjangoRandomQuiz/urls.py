@@ -18,7 +18,7 @@ from django.urls import path, include
 # from quiz.api import TopicResource
 from rest_framework import routers
 
-from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView, UserCreateView, QuestionAnswerCreateAPIView, \
+from quiz.views import TopicAPIView, QuestionAPIView, AnswerAPIView, UserCreateView, QuestionAnswerAPIView, \
     GenerateQuizAPIView, CheckQuizAnswersAPIView
 
 router = routers.DefaultRouter()
@@ -27,7 +27,7 @@ router.register('topics', TopicAPIView, basename='topic')
 router.register('questions', QuestionAPIView, basename='question')
 router.register('answers', AnswerAPIView, basename='answer')
 # create_qa creates a Question, Answers and attaches the question to a topic.
-router.register('create_qa', QuestionAnswerCreateAPIView, basename='create_qa')
+router.register('qna', QuestionAnswerAPIView, basename='qna')
 router.register('generate_quiz', GenerateQuizAPIView, basename='generate_quiz')
 router.register('attempt_quiz', CheckQuizAnswersAPIView, basename='attempt_quiz')
 

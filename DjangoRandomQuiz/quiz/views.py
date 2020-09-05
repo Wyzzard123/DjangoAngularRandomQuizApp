@@ -48,6 +48,79 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
         user = self.request.user
         return Answer.objects.filter(creator=user)
 
+    def question_queryset(self):
+        """Only search questions from what the user has created."""
+        return Question.objects.filter(creator=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """
+        If we update, first check whether the answer is connected to more than one question.
+
+        If so, we will need to remove the old answer model from the question, and create a new answer model (or use
+        another existing model with the same text) then connect it to the intended question.
+
+        To ensure this is achieved, we must allow an optional parameter for a question_id to be passed in
+        along with the answer itself, so that we can create the appropriate new model.
+        """
+        question = None
+
+        # If we have passed in question_id, we will take that out of the request data to avoid issues with
+        #  the serializer.
+        if request.data.get('question_id'):
+            question_id = request.data.pop('question_id')
+            try:
+                # Get the relevant topic.
+                question = self.question_queryset().get(id=question_id)
+            except Exception as e:
+                # Topic does not exist.
+                return Response({"error_description": "Question Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', False)
+        answer = self.get_object()
+        serializer = self.get_serializer(answer, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # The new answer text.
+        updated_answer_text = serializer.validated_data['text']
+
+        if answer.questions.count() <= 1:
+            # If the answer being updated has only one question (or none), then simply perform update as per the normal API
+            #  update view.
+            self.perform_update(serializer)
+            if getattr(answer, '_prefetched_objects_cache', None):
+                # If 'prefetch_related' has been applied to a queryset, we need to
+                # forcibly invalidate the prefetch cache on the instance.
+                answer._prefetched_objects_cache = {}
+            return Response(serializer.data)
+        else:
+            if not question:
+                return Response({"error_description": "As there are multiple questions with this answer, "
+                                                      "you must pass a question_id in the request for the answer you "
+                                                      "wish to edit."},
+                                status=status.HTTP_400_BAD_REQUEST)
+            # Otherwise, create a new model separate from the existing one and attach that to the model instead.
+            # Remove the current answer from the model.
+            question.answers.remove(answer)
+
+            if self.get_queryset().filter(text=updated_answer_text):
+                # If the updated answer text matches another answer already in the database, add that to the existing
+                #  question.
+                new_answer = self.get_queryset().get(text=updated_answer_text)
+                question.answers.add(new_answer)
+            else:
+                # Otherwise, create a new answer object and add that to the question.
+                new_answer = Answer.objects.create(text=updated_answer_text,
+                                                   creator=self.request.user)
+                question.answers.add(new_answer)
+            response_dict = {
+                'id': new_answer.id,
+                'creator': new_answer.creator.id,
+                'text': new_answer.text,
+                'questions': [question.id for question in new_answer.questions.all()]
+            }
+            # Return the new updated answer as a dict.
+            return Response(response_dict, status=status.HTTP_200_OK)
+
 
 class QuizViewSet(viewsets.ViewSet):
     """
@@ -71,12 +144,67 @@ class QuizViewSet(viewsets.ViewSet):
         return Quiz.objects.filter(creator=self.request.user)
 
 
-class QuestionAnswerCreateAPIView(QuizViewSet):
+class QuestionAnswerAPIView(QuizViewSet):
     """
-    Create a question with one or more answers.
+    This serves as the primary endpoint to retrieve a list of questions and answers for a given topic, and to then
+    edit said questions and answers.
+
+    The retrieve view takes in a topic ID as the PK then gets all the available questions for that topic with their
+    answers. These questions can then each be edited and sent to the update view.
+
+    The create view creates a question with one or more answers.
 
     See https://www.django-rest-framework.org/tutorial/3-class-based-views/ for how to create an API View.
     """
+
+    def retrieve(self, request, pk, format=None):
+        """
+        Given a topic ID, get a list of questions, and a list of answers for each question.
+
+        Return a dict with the topic_id, and a list of questions with answers.
+
+        {
+            # We will not allow people to change the topic name through here.
+            'topic':        topic.id,
+            'qna':        [{'question_id': question1.id, 'question_text': question1.text,
+                           'answers': [{'answer_id': 'answer1.id', 'answer_text': answer1.text},
+                                       {'answer_id': 'answer2.id', 'answer_text': answer2.text}]},
+                            {'question_id': question2.id, 'question_text': question2.text,
+                           'answers': [{'answer_id': 'answer1.id', 'answer_text': answer1.text},
+                                       {'answer_id': 'answer2.id', 'answer_text': answer2.text}]}]
+
+        }
+        """
+        topic_id = pk
+
+        try:
+            # Get the relevant topic.
+            topic = self.topic_queryset().get(id=topic_id)
+        except Exception as e:
+            # Topic does not exist.
+            return Response({"error_description": "Topic Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        response_dict = {
+            'topic': topic.id,
+            'qna': []
+        }
+
+        for question in topic.questions.all():
+            question_dict = {
+                'question_id': question.id,
+                'question_name': question.text,
+                'answers': []
+            }
+            for answer in question.answers.all():
+                answer_dict = {
+                    'answer_id': answer.id,
+                    'answer_text': answer.text,
+                }
+                question_dict['answers'].append(answer_dict)
+            response_dict['qna'].append(question_dict)
+
+        return Response(response_dict, status=status.HTTP_200_OK)
+
     # Using 'create' instead of post so we can use a ViewSet and register to the router.
     # See https://stackoverflow.com/questions/30389248/how-can-i-register-a-single-view-not-a-viewset-on-my-router
     def create(self, request, format=None):
@@ -87,7 +215,7 @@ class QuestionAnswerCreateAPIView(QuizViewSet):
 
         curl -X POST -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
           --data '{"topic":"<topic_id>","question":"<question_id>","answers":["<answer_text_1>","<answer_text_2>",
-          "<answer_text_3>"]}' "127.0.0.1:8000/api/create_qa/"
+          "<answer_text_3>"]}' "127.0.0.1:8000/api/qna/"
         """
         serializer = QuestionAnswerSerializer(data=request.data)
 
@@ -100,7 +228,7 @@ class QuestionAnswerCreateAPIView(QuizViewSet):
                 topic = self.topic_queryset().get(id=topic_id)
             except Exception as e:
                 # Topic does not exist.
-                return Response({"Error": "Topic Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error_description": "Topic Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
 
             user = self.request.user
             list_of_answer_instances = []
@@ -150,7 +278,7 @@ class GenerateQuizAPIView(QuizViewSet):
             quiz = self.quiz_queryset().get(id=pk).quiz
         except Exception as e:
             # Topic does not exist.
-            return Response({"Error": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error_description": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response(quiz, status=status.HTTP_200_OK)
@@ -202,6 +330,8 @@ class CheckQuizAnswersAPIView(QuizViewSet):
 
     def update(self, request, pk):
         """
+        Check quiz answers.
+
         Pass in the pk of a quiz as the 'pk'. We will attempt this particular quiz and return the attempt dictionary.
 
         curl -X GET -H "Authorization: Bearer <Token>" -H "Content-Type: application/json"
@@ -213,11 +343,12 @@ class CheckQuizAnswersAPIView(QuizViewSet):
             quiz = self.quiz_queryset().get(id=pk)
         except Exception as e:
             # Topic does not exist.
-            return Response({"Error": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error_description": "Quiz Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = QuizAnswerSerializer(data=request.data)
         if serializer.is_valid():
             chosen_answers = serializer.validated_data['answers']
+            # TODO - Add validation
             quiz_attempt = quiz.check_quiz_answers(chosen_answers=chosen_answers).quiz_attempt
             return Response(quiz_attempt, status=status.HTTP_201_CREATED)
 

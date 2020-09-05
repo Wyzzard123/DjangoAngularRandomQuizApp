@@ -94,7 +94,7 @@ class Topic(UUIDAndTimeStampAbstract):
         We will then save a dict with the following dict to the Quiz model (the id is added after saving once):
 
         {
-            "topic": topic_text,
+            "topic": topic_id,
             "questions": [
                 {'question_text': question_text_1, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'checkbox'},
                 {'question_text': question_text_2, 'choices': [choice_text_1, choice_text_2, ... choice_text_n], 'question_type': 'radio'},
@@ -116,7 +116,8 @@ class Topic(UUIDAndTimeStampAbstract):
         # Get quiz topic
         quiz_topic = self
 
-        quiz = {"topic": quiz_topic.name,
+        quiz = {"topic": quiz_topic.id,
+                "topic_name": quiz_topic.name,
                 "questions": []}
 
         # Limit number of questions and number of choices
@@ -409,7 +410,8 @@ class Quiz(UUIDAndTimeStampAbstract):
         score = total_points_scored / possible_points
 
         quiz_attempt = {
-            "topic": self.quiz["topic"],
+            "topic_id": self.quiz["topic"],
+            "topic_name": self.quiz["topic_name"],
             "questions": attempt_dict_questions_list,
             "no_of_correct_answers": no_of_correct_answers,
             "no_of_wrong_answers": no_of_wrong_answers,
