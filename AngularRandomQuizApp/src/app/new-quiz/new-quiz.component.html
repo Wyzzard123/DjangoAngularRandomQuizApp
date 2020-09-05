@@ -4,36 +4,36 @@
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
     <label>Select a Topic:</label><br/>
       <select class="custom-select" (click)="getTopics();" [(ngModel)]="quizSettings.topicId" (change)="onSelectTopic($event)">
-      <option value="0">--SELECT A TOPIC--</option>
-        <option value="-1">--CREATE A NEW TOPIC--</option>
+      <option [value]="selectATopicIndex">--SELECT A TOPIC--</option>
+        <option [value]="createNewTopicIndex">--CREATE A NEW TOPIC--</option>
       <option *ngFor="let topic of topics" value="{{topic.id}}" (select)="quizSettings.topicName = topic.name">{{topic.name}}</option>
     </select>
     </div>
 
 <!--    Create new topic-->
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="quizSettings.topicId == -1">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="createTopicMode">
       <label>Create a New Topic:</label><br/>
       <input type="text" name="new-topic" [(ngModel)]="newTopic">
     </div>
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="quizSettings.topicId == -1">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="createTopicMode">
       <button (click)="createNewTopic()" class="btn btn-primary">Create New Topic</button>&nbsp;
     </div>
 
 <!--    Toggle Edit Topic Mode on-->
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
-      <button (click)="toggleEditTopicMode()" class="btn btn-secondary" [disabled]="quizSettings.topicId == 0 || quizSettings.topicId == -1">Edit/Delete Topic</button>&nbsp;
+      <button (click)="toggleEditTopicMode()" class="btn btn-secondary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex">Edit/Delete Topic</button>&nbsp;
     </div>
 
 <!--    Edit topic-->
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="editTopicMode">
       <label>Edit Topic Name</label><br/>
       <input type="text" name="new-topic" [(ngModel)]="editTopicName">
     </div>
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="editTopicMode">
       <button (click)="editTopic()" class="btn btn-primary">Save Changes to Topic Name</button>
     </div>
 <!--    Delete Topic -->
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="editTopicMode">
       <button (click)="deleteTopic()" class="btn btn-danger">Delete Topic</button>
     </div>
 
@@ -48,7 +48,7 @@
       <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices">
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="!this.editTopicMode">
-      <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == 0 || quizSettings.topicId == -1">Generate Quiz</button>&nbsp;
+      <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex">Generate Quiz</button>&nbsp;
     </div>
 
   </div>

@@ -15,6 +15,9 @@ export class NewQuizComponent implements OnInit {
   public editTopicMode = false;
   public editTopicName: null;
 
+  // If we are in createTopicMode, we can create a new topic.
+  public createTopicMode = false;
+
   constructor(public _newQuiz: NewQuizService, public _userService: UserService, private http: HttpClient) { }
 
   public quizSettings: any;
@@ -25,6 +28,11 @@ export class NewQuizComponent implements OnInit {
 
   // Error messages received
   public errors: any = [];
+
+  // Index value of the default option in the select menu
+  public selectATopicIndex = 0;
+  // Index values of the create topic option in the select menu
+  public createNewTopicIndex = -1;
 
 
   ngOnInit(): void {
@@ -65,11 +73,12 @@ export class NewQuizComponent implements OnInit {
           console.log('Success', data);
           // Reset newTopic.
           this.newTopic = '';
+          this.editTopicMode = false;
           // Get topics again and overwrite the current topic list.
           this.getTopics(true);
 
           // Set the selected topic as the one we just created.
-          this.quizSettings.topicId = data.id;
+          this.quizSettings.topicId = data['id'];
         },
         err => {
           this.errors = err.error;
@@ -125,7 +134,7 @@ export class NewQuizComponent implements OnInit {
           this.getTopics(true);
 
           // Set the selected topic as the one we just updated.
-          this.quizSettings.topicId = data.id;
+          this.quizSettings.topicId = data['id'];
 
           // Turn off edit Topic Mode.
           this.editTopicMode = false;
@@ -160,8 +169,27 @@ export class NewQuizComponent implements OnInit {
   }
 
   onSelectTopic($event: Event) {
+    const selectedOption = $event.target['options'][$event.target['options']['selectedIndex']];
+
     console.log($event);
-    this.editTopicName = $event.target.options[$event.target.options.selectedIndex].innerText;
+
+    if (selectedOption['value']  == this.createNewTopicIndex) {
+        this.createTopicMode = true;
+    }
+     else {
+       this.createTopicMode = false;
+     }
+
+    // Set edit topic mode to false if we select create new topic or the default 'select a topic'.
+    if (selectedOption['value']  == this.selectATopicIndex || selectedOption['value']  == this.createNewTopicIndex) {
+      this.editTopicMode = false;
+
+    }
+    // Set editTopicName to the name of the chosen topic unless we select create new topic or the default 'select a topic'.
+    this.editTopicName = selectedOption['value'] != 0 && selectedOption['value'] != -1
+      ? selectedOption.innerText
+      : this.editTopicName = null
+    ;
     console.log(this.editTopicName );
   }
 
