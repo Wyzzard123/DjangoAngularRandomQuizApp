@@ -16,7 +16,7 @@
       <input type="text" name="new-topic" [(ngModel)]="newTopic">
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="createTopicMode">
-      <button (click)="createNewTopic()" class="btn btn-primary">Create New Topic</button>&nbsp;
+      <button (click)="createNewTopic()" class="btn btn-primary" [disabled]="newTopic == null || newTopic.length === 0">Create New Topic</button>&nbsp;
     </div>
 
 <!--    Toggle Edit Topic Mode on-->
@@ -48,7 +48,8 @@
       <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices">
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="!this.editTopicMode">
-      <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex">Generate Quiz</button>&nbsp;
+      <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex
+      || quizSettings.noOfQuestions <= 0 || quizSettings.noOfChoices <= 0">Generate Quiz</button>&nbsp;
     </div>
 
   </div>

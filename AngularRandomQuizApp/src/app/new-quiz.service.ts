@@ -192,6 +192,7 @@ export class NewQuizService {
         // Create the quiz form
         this.createQuizForm(data);
         this.quiz = data;
+        this.scrollToQuiz();
       },
       err => {
         this.errors = err.error;
