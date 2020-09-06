@@ -192,7 +192,7 @@ class QuestionAnswerAPIView(QuizViewSet):
         for question in topic.questions.all():
             question_dict = {
                 'question_id': question.id,
-                'question_name': question.text,
+                'question_text': question.text,
                 'answers': []
             }
             for answer in question.answers.all():

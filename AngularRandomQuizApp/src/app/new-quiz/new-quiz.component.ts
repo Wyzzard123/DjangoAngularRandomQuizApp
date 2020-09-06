@@ -4,6 +4,7 @@ import {UserService} from "../user.service";
 import {FormGroup, FormArray, FormBuilder, FormControl} from "@angular/forms";
 import {environment} from '../../environments/environment';
 import {HttpClient} from "@angular/common/http";
+import {EditQNAService} from "../edit-qna.service";
 
 @Component({
   selector: 'app-new-quiz',
@@ -15,10 +16,13 @@ export class NewQuizComponent implements OnInit {
   public editTopicMode = false;
   public editTopicName: null;
 
+  public editQNAMode = false;
+
   // If we are in createTopicMode, we can create a new topic.
   public createTopicMode = false;
 
-  constructor(public _newQuiz: NewQuizService, public _userService: UserService, private http: HttpClient) { }
+  constructor(public _newQuiz: NewQuizService, public _userService: UserService, private http: HttpClient,
+              public _editQNA: EditQNAService) { }
 
   public quizSettings: any;
   public topicsAPIUrl = `${environment.API_URL}/api/topics/`;
@@ -74,6 +78,7 @@ export class NewQuizComponent implements OnInit {
           // Reset newTopic.
           this.newTopic = '';
           this.editTopicMode = false;
+          this.createTopicMode = false;
           // Get topics again and overwrite the current topic list.
           this.getTopics(true);
 
@@ -87,6 +92,9 @@ export class NewQuizComponent implements OnInit {
   }
 
   generateQuiz(): any {
+    this.editTopicMode = false;
+    this.createTopicMode = false;
+    this.editQNAMode = false;
     this._newQuiz.generateQuiz(this.quizSettings);
   }
 
@@ -117,8 +125,8 @@ export class NewQuizComponent implements OnInit {
   toggleEditTopicMode() {
     this.editTopicMode = !this.editTopicMode;
     // this.quizSettings.topicName =
-    console.log(this.quizSettings.topicName)
-    console.log(this.editTopicMode)
+    console.log(this.quizSettings.topicName);
+    console.log(this.editTopicMode);
   }
 
   editTopic() {
@@ -173,12 +181,7 @@ export class NewQuizComponent implements OnInit {
 
     console.log($event);
 
-    if (selectedOption['value']  == this.createNewTopicIndex) {
-        this.createTopicMode = true;
-    }
-     else {
-       this.createTopicMode = false;
-     }
+    this.createTopicMode = selectedOption['value'] == this.createNewTopicIndex;
 
     // Set edit topic mode to false if we select create new topic or the default 'select a topic'.
     if (selectedOption['value']  == this.selectATopicIndex || selectedOption['value']  == this.createNewTopicIndex) {
@@ -186,11 +189,27 @@ export class NewQuizComponent implements OnInit {
 
     }
     // Set editTopicName to the name of the chosen topic unless we select create new topic or the default 'select a topic'.
-    this.editTopicName = selectedOption['value'] != 0 && selectedOption['value'] != -1
+    this.editTopicName = selectedOption['value'] != this.selectATopicIndex && selectedOption['value'] != this.createNewTopicIndex
       ? selectedOption.innerText
-      : this.editTopicName = null
+      : null
     ;
     console.log(this.editTopicName );
+  }
+
+  toggleEditQNAMode() {
+    this.editQNAMode = !this.editQNAMode;
+  }
+
+  getQNA(topicId) {
+    /*
+    Get the entire list of QNA for a given topic.
+     */
+    this.toggleEditQNAMode();
+    if (this.editQNAMode) {
+      this._editQNA.getQNA(topicId);
+    }
+
+
   }
 
 
