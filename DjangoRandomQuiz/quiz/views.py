@@ -288,6 +288,11 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                                                       "wish to edit."},
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
+                # Check if the question has more than one answer. If it only has one answer left, do not delete.
+                if question.answers.count() > 1:
+                    self.perform_destroy(answer)
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+
                 # If we have multiple questions, remove the question from the list of questions for this particular
                 #  answer.
                 answer.questions.remove(question)
