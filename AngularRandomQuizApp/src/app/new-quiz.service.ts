@@ -3,6 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {UserService} from './user.service';
 import {environment} from '../environments/environment';
 import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {ScrollerService} from "./scroller.service";
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,8 @@ export class NewQuizService {
 
   quizForm: FormGroup;
 
-  constructor(private http: HttpClient, public _userService: UserService, private fb: FormBuilder) { }
+  constructor(private http: HttpClient, public _userService: UserService, private fb: FormBuilder,
+              public scroller: ScrollerService) { }
 
   // Restart the quiz form from a blank slate.
   resetQuiz(): any {
@@ -141,10 +143,12 @@ export class NewQuizService {
     );
   }
 
+
+
   scrollToQuiz(): any {
     // TODO - Scroll to quiz when done. Right now, however, the quiz is always null the first time we try to scroll and
     //  this means we stay still for the first click.
-    document.getElementById('quiz').scrollIntoView({behavior:'smooth'});
+    this.scroller.scrollToElementId('quiz');
   }
 
   showAnswers(): any {

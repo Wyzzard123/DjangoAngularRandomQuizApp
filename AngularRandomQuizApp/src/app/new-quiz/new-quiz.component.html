@@ -51,24 +51,25 @@
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
       <button (click)="getQNA(quizSettings.topicId)" class="btn btn-secondary"
               [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex">
-        View/Add/Edit Questions
+        <span *ngIf="editQNAMode">Quiz Settings</span>
+        <span *ngIf="!editQNAMode">View/Add/Edit Questions</span>
       </button>&nbsp;
     </div>
 
   </div>
 
   <!--  Row for quiz options-->
-  <div class="row">
+  <div class="row" *ngIf="!this.editTopicMode && !this.editQNAMode">
     <!--    Quiz options -->
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="!this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Questions:</label><br/>
       <input type="number" name="no-of-questions" [(ngModel)]="quizSettings.noOfQuestions">
     </div>
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2" *ngIf="!this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Number of Choices:</label><br/>
       <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices">
     </div>
-    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="!this.editTopicMode">
+    <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
       <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex
       || quizSettings.noOfQuestions <= 0 || quizSettings.noOfChoices <= 0">Generate Quiz
       </button>&nbsp;
@@ -86,22 +87,55 @@
       <div formArrayName="qna" *ngFor="let qna of _editQNA.qnaForm.get('qna')['controls']; let i=index">
         <div class="col-12">
 
-<!--          <li><label>Question</label>-->
-<!--            <textarea #questionTextField class="form-control" rows="3"-->
-<!--                        (input)="qna.value.questionText = questionTextField.value" formControlName="questionText"-->
-<!--                        [value]="qna.value.questionText"></textarea></li>-->
-          <li>{{qna.value.questionText}}</li>
+          <!--          <li><label>Question</label>-->
+          <!--            <textarea #questionTextField class="form-control" rows="3"-->
+          <!--                        (input)="qna.value.questionText = questionTextField.value" formControlName="questionText"-->
+          <!--                        [value]="qna.value.questionText"></textarea></li>-->
+
+          <!--          Using href="javascript:void(0)" causes the href to do absolutely nothing, as opposed to # which scrolls us to the top of the screen. -->
+          <li>{{qna.value.questionText}} <a (click)="_editQNA.toggleEditQNAQuestionMode(qna)" href="javascript:void(0)">
+            <span *ngIf="!qna.value.editQuestion"><strong>(Edit Question)</strong></span>
+            <span *ngIf="qna.value.editQuestion" style="color: red"><strong>(Close Edit Question)</strong></span>
+          </a></li>
+          <textarea #questionTextField class="form-control" rows="3"
+                    (input)="qna.value.questionText = questionTextField.value" formControlName="questionText"
+                    [value]="qna.value.questionText" *ngIf="qna.value.editQuestion"></textarea>
+
+          <div *ngIf="qna.value.editQuestion">
+            <button (click)="_editQNA.editQuestion(qna)" class="btn btn-primary ml-auto">Save Changes</button>
+            <button (click)="_editQNA.deleteQuestion(qna, i)" class="btn btn-danger ml-auto">Delete Question</button>
+          </div>
           <div [formGroupName]="i">
-            <div formArrayName="answers" *ngFor="let answer of qna.get('answers')['controls']; let j=index">
-              <div [formGroupName]="j">
-                <!--            Use fieldset to disable form-->
-                <fieldset>
-                  <input type="radio" formControlName="answerText" [value]="answer.answerText">
-                  <label style="padding-left: 10px">
-                    {{answer.value.answerText}}</label>
-                </fieldset>
+            <!--            Default padding-inline-start is 40px-->
+            <ul style="padding-inline-start: 18px">
+              <div formArrayName="answers" *ngFor="let answer of qna.get('answers')['controls']; let j=index">
+                <div [formGroupName]="j">
+                  <!--            Use fieldset to disable form-->
+                  <fieldset>
+                    <li>{{answer.value.answerText}} <a (click)="_editQNA.toggleEditQNAAnswerMode(answer)"
+                                                       href="javascript:void(0)">
+                      <span *ngIf="!answer.value.editAnswer"><strong>(Edit Answer)</strong></span>
+                      <span *ngIf="answer.value.editAnswer"
+                            style="color: red"><strong>(Close Edit Answer)</strong></span></a></li>
+                  </fieldset>
+                  <textarea #answerTextField class="form-control" rows="3"
+                            (input)="answer.value.answerText = answerTextField.value" formControlName="answerText"
+                            [value]="answer.value.answerText" *ngIf="answer.value.editAnswer"></textarea>
+                  <div *ngIf="answer.value.editAnswer">
+                    <button (click)="_editQNA.editAnswer(qna, answer)" class="btn btn-primary ml-auto">Save Changes
+                    </button>
+                    <button (click)="_editQNA.deleteAnswer(qna, answer, i, j)" class="btn btn-danger ml-auto">Delete
+                      Answer
+                    </button>
+                  </div>
+                  <div *ngIf="answer.value.errors" class="text-danger">
+                    <strong>{{ answer.value.errors.error_description }}</strong>
+                    <!--    TODO - Handle case where the new topic isn't created because it's not unique: e.g. console.log(this.errors.non_field_errors[0])-->
+                  </div>
+
+                </div>
               </div>
-            </div>
+            </ul>
           </div>
         </div>
       </div>
@@ -109,7 +143,7 @@
   </form>
 
   <!--  Generated Quiz -->
-  <form id="quiz" [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz" (submit)="_newQuiz.onSubmit()">
+  <form id="quiz" [formGroup]="_newQuiz.quizForm" *ngIf="_newQuiz.quiz && !editQNAMode" (submit)="_newQuiz.onSubmit()">
     <ol style="padding-inline-start: 0">
       <div formArrayName="qna" *ngFor="let qna of _newQuiz.quizForm.get('qna')['controls']; let i=index">
         <div class="col-12">

@@ -54,6 +54,9 @@ export class NewQuizComponent implements OnInit {
     if (!this.topics || overwriteTopics) {
       this.updateTopics();
     }
+    if (this.editQNAMode) {
+      this._editQNA.getQNA(this.quizSettings.topicId);
+    }
   }
 
   updateTopics(): any {
@@ -199,6 +202,12 @@ export class NewQuizComponent implements OnInit {
 
   toggleEditQNAMode() {
     this.editQNAMode = !this.editQNAMode;
+
+    // TODO - Scroll to the edit QNA form. This currently does not work because the form with id 'qna' does not exist
+    //  at the moment this is triggered.
+    // if (this.editQNAMode) {
+    //   this._editQNA.scrollToEditQNA();
+    // }
   }
 
   getQNA(topicId) {
