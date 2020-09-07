@@ -84,6 +84,7 @@ export class NewQuizComponent implements OnInit {
 
           // Set the selected topic as the one we just created.
           this.quizSettings.topicId = data['id'];
+          this.editTopicName = data['name'];
         },
         err => {
           this.errors = err.error;
