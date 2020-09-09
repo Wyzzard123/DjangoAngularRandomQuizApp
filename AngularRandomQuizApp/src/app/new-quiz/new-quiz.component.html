@@ -84,6 +84,16 @@
   <!-- Edit qna form -->
   <form id="qna" [formGroup]="_editQNA.qnaForm" *ngIf="editQNAMode">
     <ol style="padding-inline-start: 0">
+<!--      Add a new QNA -->
+      <button (click)="_editQNA.addNewQNAField()" class="btn btn-primary ml-auto">Add Question
+                    </button>
+      <div formArrayName="newQna" *ngFor="let newQna of _editQNA.qnaForm.get('newQna')['controls']; let k=index">
+        <li><textarea #newQuestionTextField class="form-control" rows="3"
+                (input)="newQna.value.questionText = newQuestionTextField.value" formControlName="questionText"
+                    [value]="newQna.value.questionText"></textarea></li>
+
+      </div>
+
       <div formArrayName="qna" *ngFor="let qna of _editQNA.qnaForm.get('qna')['controls']; let i=index">
         <div class="col-12">
 

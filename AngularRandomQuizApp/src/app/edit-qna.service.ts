@@ -52,12 +52,28 @@ export class EditQNAService {
     );
   }
 
-  resetQNA():any {
+  resetQNA(): any {
     this.qnaForm = this.fb.group({
       // ID of the topic.
       topicId: '',
-      qna: this.fb.array([])
+
+      // QNA to edit.
+      qna: this.fb.array([]),
+
+      // QNA to add.
+      newQna: this.fb.array([])
     });
+  }
+
+  addNewQNAField(): any {
+    //  Add in a form field to create a new QNA.
+    const newQNAField = this.qnaForm.get('newQna') as FormArray;
+    const questionGroup = this.fb.group({
+      questionText: '',
+      // Initialize the answers with one item.
+      answers: this.fb.array([''])
+    });
+    newQNAField.push(questionGroup);
   }
 
   createQNAForm(qna): any {
@@ -68,6 +84,7 @@ export class EditQNAService {
 
     const qnaField = this.qnaForm.get('qna') as FormArray;
 
+    // Create and push questions and answers to the qnaField based on the qna received from an API response.
     for (const question of qna.qna) {
       const questionGroup = this.fb.group( {
         questionText: question.question_text,
@@ -89,7 +106,7 @@ export class EditQNAService {
       }
       qnaField.push(questionGroup);
     }
-    console.log(this.qnaForm)
+    console.log(this.qnaForm);
   }
 
 
