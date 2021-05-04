@@ -13,41 +13,38 @@ export class UserService {
   private httpOptions: any;
 
   // The access token.
-  public token: string;
+  token: string;
 
   // The refresh token
-  public refreshToken: string;
+  refreshToken: string;
 
   // Token expiration date
-  public tokenExpires: Date;
+  tokenExpires: Date;
 
   // When we got the token
-  public tokenRetrieved: Date;
+  tokenRetrieved: Date;
 
   // Username of the logged in user.
-  public username: string;
+  username: string;
 
   // Error messages received from the login attempt.
-  public errors: any = [];
+  errors: any = [];
 
   // The API URL to get a token (eg http://localhost:8000/o/token)
-  public tokenUrl = `${environment.API_URL}/o/token/`;
+  tokenUrl = `${environment.API_URL}/o/token/`;
+
+  httpFormHeaders = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
 
   constructor(private http: HttpClient) {
-    this.httpOptions = {
-      // Note that if the Content-Type is not 'application/x-www-form-urlencoded' and the format of the data is not
-      //  '...=...&...=...&...=...', the requests to oauth toolkit's urls will NOT work.
-      headers: new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'})
-    };
   }
 
   //  Login to the using django rest framework API. The passed in 'user' will be a json in the format: {username: '', password: ''}
-  public login(user): any {
+  login(user): any {
     // Add the client ID to the data as this is required for the OAuth to work.
     // Note that if the payload is not in this format and the Content-Type is not 'application/x-www-form-urlencoded',
     //  the requests to oauth toolkit's urls will NOT work.
     const payload = `grant_type=password&username=${user.username}&password=${user.password}&client_id=${environment.CLIENT_ID}`;
-    this.http.request<{access_token: string, expires_in: number, refresh_token: string}>('POST', this.tokenUrl, { headers: new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'}), body: payload }).subscribe(
+    this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.tokenUrl, payload, { headers: this.httpFormHeaders }).subscribe(
         (data) => {
         this.tokenRetrieved = new Date(Date.now());
         this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
@@ -58,11 +55,11 @@ export class UserService {
     );
   }
 
-  public refreshTokenAPI(user, refreshToken): any {
+  refreshTokenAPI(user, refreshToken): any {
     //  Sends a refresh token to get a new token
     // const payload = JSON.stringify({client_id: environment.CLIENT_ID , grant_type: 'password'});
-    const payload = `grant_type=refresh_token&client_id=${environment.CLIENT_ID}&refresh_token=${this.refreshToken}`;
-    this.http.post(this.tokenUrl, payload, this.httpOptions).subscribe(
+    const payload = `grant_type=refresh_token&client_id=${environment.CLIENT_ID}&refresh_token=${refreshToken}`;
+    this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.tokenUrl, payload, { headers: this.httpFormHeaders}).subscribe(
       data => {
         console.log('Token Refresh Succeeded', data);
         // this.expiryDate = Date.now() + parseInt(data.expires_in);
@@ -76,14 +73,14 @@ export class UserService {
     );
   }
 
-  public logout(): any {
+  logout(): any {
     this.token = null;
     this.tokenExpires = null;
     this.username = null;
     this.refreshToken = null;
   }
 
-  public updateData(userName, accessToken, expiresIn, refreshToken): any {
+  updateData(userName, accessToken, expiresIn, refreshToken): any {
     // Set token expiry to the datetime we retrieved the token + the number of seconds in data['expires_in']
     this.tokenExpires = new Date(this.tokenRetrieved);
     this.tokenExpires.setSeconds(this.tokenRetrieved.getSeconds() + expiresIn);
