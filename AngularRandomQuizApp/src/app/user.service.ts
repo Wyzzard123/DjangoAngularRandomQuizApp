@@ -47,10 +47,10 @@ export class UserService {
     // Note that if the payload is not in this format and the Content-Type is not 'application/x-www-form-urlencoded',
     //  the requests to oauth toolkit's urls will NOT work.
     const payload = `grant_type=password&username=${user.username}&password=${user.password}&client_id=${environment.CLIENT_ID}`;
-    this.http.post(this.tokenUrl, payload, this.httpOptions).subscribe(
-      data => {
+    this.http.request<{access_token: string, expires_in: number, refresh_token: string}>('POST', this.tokenUrl, { headers: new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'}), body: payload }).subscribe(
+        (data) => {
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
+        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
       },
       err => {
         this.errors = err.error;
@@ -67,7 +67,7 @@ export class UserService {
         console.log('Token Refresh Succeeded', data);
         // this.expiryDate = Date.now() + parseInt(data.expires_in);
         this.tokenRetrieved = new Date(Date.now());
-        this.updateData(user.username, data['access_token'], data['expires_in'], data['refresh_token']);
+        this.updateData(user.username, data.access_token, data.expires_in, data.refresh_token);
       },
       err => {
         console.error('Refresh Error', err);
