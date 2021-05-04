@@ -136,7 +136,14 @@
           <li>{{qna.value.questionText}} <a (click)="_editQNA.toggleEditQNAQuestionMode(qna)" href="javascript:void(0)">
             <span *ngIf="!qna.value.editQuestion"><strong>(Edit Question)</strong></span>
             <span *ngIf="qna.value.editQuestion" style="color: red"><strong>(Close Edit Question)</strong></span>
-          </a></li>
+          </a>
+             <a (click)="_editQNA.addNewAnswerField(qna)" href="javascript:void(0)">
+            <span><strong>(Add Answer)</strong></span>
+
+          </a>
+
+
+          </li>
           <textarea #questionTextField class="form-control" rows="3"
                     (input)="qna.value.questionText = questionTextField.value" formControlName="questionText"
                     [value]="qna.value.questionText" *ngIf="qna.value.editQuestion"></textarea>
@@ -154,7 +161,8 @@
                   <fieldset>
                     <li>{{answer.value.answerText}} <a (click)="_editQNA.toggleEditQNAAnswerMode(answer)"
                                                        href="javascript:void(0)">
-                      <span *ngIf="!answer.value.editAnswer"><strong>(Edit Answer)</strong></span>
+                      <span *ngIf="!answer.value.editAnswer && answer.value.answerId"><strong>(Edit Answer)</strong></span>
+                      <span *ngIf="!answer.value.editAnswer && !answer.value.answerId" style="color: red"><strong>(Edit Answer - NOT ADDED)</strong></span>
                       <span *ngIf="answer.value.editAnswer"
                             style="color: red"><strong>(Close Edit Answer)</strong></span></a></li>
                   </fieldset>
@@ -162,7 +170,9 @@
                             (input)="answer.value.answerText = answerTextField.value" formControlName="answerText"
                             [value]="answer.value.answerText" *ngIf="answer.value.editAnswer"></textarea>
                   <div *ngIf="answer.value.editAnswer">
-                    <button (click)="_editQNA.editAnswer(qna, answer)" class="btn btn-primary ml-auto">Save Changes
+                    <button (click)="_editQNA.editAnswer(qna, answer)" class="btn btn-primary ml-auto" *ngIf="answer.value.answerId">Save Changes
+                    </button>
+                    <button (click)="_editQNA.addAnswer(qna, answer)" class="btn btn-primary ml-auto" *ngIf="!answer.value.answerId">Add Answer
                     </button>
                     <button (click)="_editQNA.deleteAnswer(qna, answer, i, j)" class="btn btn-danger ml-auto">Delete
                       Answer
