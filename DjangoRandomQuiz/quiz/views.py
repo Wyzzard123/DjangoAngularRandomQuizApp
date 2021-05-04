@@ -445,7 +445,17 @@ class QuestionAnswerAPIView(QuizViewSet):
                 response_dict['answers'].append(answer_dict)
             return Response(response_dict, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Compile all errors into an error_description
+        error_description_list = []
+        for key, _ in serializer.errors.items():
+            if key == 'question':
+                error_description_list.append("Question cannot be blank.")
+            if key == 'answers':
+                error_description_list.append("Answers cannot be blank.")
+
+        error_description = " ".join(error_description_list)
+
+        return Response({"error_description": error_description}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GenerateQuizAPIView(QuizViewSet):

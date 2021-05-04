@@ -281,6 +281,16 @@ export class EditQNAService {
       });
   }
 
+  deleteNewQuestion(qna: any, indexOfQuestion: any) {
+    this.qnaForm['controls']['newQna']['removeAt'](indexOfQuestion);
+  }
+
+  deleteNewAnswer(qna: any, answer: any, indexOfQuestion: any, indexOfAnswer: any) {
+    // const qnaField = this.qnaForm.get('qna') as FormArray;
+    // const questionGroupAnswers = questionGroup.get('answers') as FormArray;
+    this.qnaForm['controls']['newQna']['controls'][indexOfQuestion]['controls']['answers']['removeAt'](indexOfAnswer);
+  }
+
   createQNA(newQna: any, indexOfQuestion: any) {
     //TODO - Add create QNA
     // const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: newQna.get('answers')['controls']});
@@ -309,8 +319,10 @@ export class EditQNAService {
       },
       err => {
         console.log('This is the error', err);
-        this.errors = err.error;
+        newQna.value.errors = err.error;
         console.log(err.error);
+        console.log(newQna);
+        console.log(newQna.value.errors);
       });
 
   }

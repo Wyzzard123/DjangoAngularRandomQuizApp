@@ -91,7 +91,9 @@
         <div formArrayName="newQna" *ngFor="let newQna of _editQNA.qnaForm.get('newQna')['controls']; let i=index">
           <li>{{newQna.value.questionText}}<textarea #newQuestionTextField class="form-control" rows="3"
                         (input)="newQna.value.questionText = newQuestionTextField.value" formControlName="questionText"
-                        [value]="newQna.value.questionText" placeholder="Add a new question"></textarea></li>
+                        [value]="newQna.value.questionText" placeholder="Add a new question"></textarea>
+            <button (click)="_editQNA.deleteNewQuestion(newQna, i)" class="btn btn-danger ml-auto">Delete Question</button>
+          </li>
           <div *ngIf="newQna.value.errors" class="text-danger">
             <strong>{{ newQna.value.errors.error_description }}</strong>
             <!--    TODO - Handle case where the new topic isn't created because it's not unique: e.g. console.log(this.errors.non_field_errors[0])-->
@@ -107,10 +109,10 @@
                             (input)="answer.value.answerText = newAnswerTextField.value" formControlName="answerText"
                             [value]="answer.value.answerText"
                             placeholder="Add an answer. You must have at least one answer."></textarea>
-<!--                  <button (click)="_editQNA.deleteAnswer(newQna, answer, k, l)"-->
-<!--                          class="btn btn-danger ml-auto">Delete-->
-<!--                    Answer-->
-<!--                  </button>-->
+                  <button (click)="_editQNA.deleteNewAnswer(newQna, answer, i, j)"
+                          class="btn btn-danger ml-auto" *ngIf="j != 0">Delete
+                    Answer
+                  </button>
                   </li>
                 </div>
               </div>
