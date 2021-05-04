@@ -82,15 +82,43 @@
   </div>
 
   <!-- Edit qna form -->
-  <form id="qna" [formGroup]="_editQNA.qnaForm" *ngIf="editQNAMode">
+  <form id="newQna" [formGroup]="_editQNA.qnaForm" *ngIf="editQNAMode">
     <ol style="padding-inline-start: 0">
-<!--      Add a new QNA -->
-      <button (click)="_editQNA.addNewQNAField()" class="btn btn-primary ml-auto">Add Question
-                    </button>
-      <div formArrayName="newQna" *ngFor="let newQna of _editQNA.qnaForm.get('newQna')['controls']; let k=index">
-        <li><textarea #newQuestionTextField class="form-control" rows="3"
-                (input)="newQna.value.questionText = newQuestionTextField.value" formControlName="questionText"
-                    [value]="newQna.value.questionText"></textarea></li>
+      <!--      Add a new QNA -->
+      <div class="col-12">
+        <button (click)="_editQNA.addNewQNAField()" class="btn btn-primary ml-auto">Add Question
+        </button>
+        <div formArrayName="newQna" *ngFor="let newQna of _editQNA.qnaForm.get('newQna')['controls']; let i=index">
+          <li>{{newQna.value.questionText}}<textarea #newQuestionTextField class="form-control" rows="3"
+                        (input)="newQna.value.questionText = newQuestionTextField.value" formControlName="questionText"
+                        [value]="newQna.value.questionText" placeholder="Add a new question"></textarea></li>
+          <div *ngIf="newQna.value.errors" class="text-danger">
+            <strong>{{ newQna.value.errors.error_description }}</strong>
+            <!--    TODO - Handle case where the new topic isn't created because it's not unique: e.g. console.log(this.errors.non_field_errors[0])-->
+          </div>
+          <br>
+          <div [formGroupName]="i">
+            <!--            Default padding-inline-start is 40px-->
+            <ul style="padding-inline-start: 18px">
+              <div formArrayName="answers" *ngFor="let answer of newQna.get('answers')['controls']; let j=index">
+                <div [formGroupName]="j">
+                  <!--            Use fieldset to disable form-->
+                  <li>{{answer.value.answerText}}<br><textarea #newAnswerTextField class="form-control" rows="3"
+                            (input)="answer.value.answerText = newAnswerTextField.value" formControlName="answerText"
+                            [value]="answer.value.answerText"
+                            placeholder="Add an answer. You must have at least one answer."></textarea>
+<!--                  <button (click)="_editQNA.deleteAnswer(newQna, answer, k, l)"-->
+<!--                          class="btn btn-danger ml-auto">Delete-->
+<!--                    Answer-->
+<!--                  </button>-->
+                  </li>
+                </div>
+              </div>
+            </ul>
+          </div>
+          <button (click)="_editQNA.addNewAnswerField(newQna)" class="btn btn-primary">Add Answer</button>
+          <button (click)="_editQNA.createQNA(newQna, i)" class="btn btn-primary ml-auto float-right">Save Q&A</button>
+        </div>
 
       </div>
 

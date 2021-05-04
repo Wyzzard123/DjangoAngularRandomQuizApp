@@ -429,11 +429,20 @@ class QuestionAnswerAPIView(QuizViewSet):
                 question.answers.add(*list_of_answer_instances)
             # Save the question to the database.
             question.save()
+
             response_dict = {
                 'topic': topic.id,
-                'question': question.id,
-                'answers': [answer.id for answer in list_of_answer_instances]
+                'question_id': question.id,
+                'question_text': question.text,
+                'answers': []
             }
+
+            for answer in question.answers.all():
+                answer_dict = {
+                    'answer_id': answer.id,
+                    'answer_text': answer.text,
+                }
+                response_dict['answers'].append(answer_dict)
             return Response(response_dict, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

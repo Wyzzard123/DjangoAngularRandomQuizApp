@@ -71,9 +71,18 @@ export class EditQNAService {
     const questionGroup = this.fb.group({
       questionText: '',
       // Initialize the answers with one item.
-      answers: this.fb.array([''])
+      answers: this.fb.array([]),
+      errors: null
     });
+    const questionGroupAnswers = questionGroup.get('answers') as FormArray;
+    questionGroupAnswers.push(this.fb.group({
+          // When editAnswer is true, give ability to edit question.
+          answerText: '',
+          errors: null,
+        }));
     newQNAField.push(questionGroup);
+    console.log("QNA FORM ");
+    console.log(this.qnaForm);
   }
 
   createQNAForm(qna): any {
@@ -104,6 +113,32 @@ export class EditQNAService {
           errors: null,
         }));
       }
+      qnaField.push(questionGroup);
+    }
+    console.log(this.qnaForm);
+  }
+
+  addToQNAForm(question): any {
+    const qnaField = this.qnaForm.get('qna') as FormArray;
+
+    // Create and push questions and answers to the qnaField based on the qna received from an API response.
+    const questionGroup = this.fb.group( {
+      questionText: question.question_text,
+      questionId: question.question_id,
+      // When editQuestion is true, give ability to edit question.
+      editQuestion: false,
+      answers: this.fb.array([]),
+    });
+    const questionGroupAnswers = questionGroup.get('answers') as FormArray;
+    for (const answer of question.answers) {
+      // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
+      questionGroupAnswers.push(this.fb.group({
+        // When editAnswer is true, give ability to edit question.
+        editAnswer: false,
+        answerText: answer.answer_text,
+        answerId: answer.answer_id,
+        errors: null,
+      }));
       qnaField.push(questionGroup);
     }
     console.log(this.qnaForm);
@@ -244,5 +279,48 @@ export class EditQNAService {
         answer.patchValue({errors: err.error});
         console.log(answer);
       });
+  }
+
+  createQNA(newQna: any, indexOfQuestion: any) {
+    //TODO - Add create QNA
+    // const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: newQna.get('answers')['controls']});
+    // newQna.get('answers')['controls']
+
+    //'{"topic":"<topic_id>","question":"<question_id>","answers":["<answer_text_1>","<answer_text_2>",
+     //     "<answer_text_3>"]}' "127.0.0.1:8000/api/qna/"
+    console.log(newQna);
+    const answers = [];
+    for (const answer of newQna.value.answers) {
+      answers.push(answer.answerText);
+    }
+
+    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: newQna.value.questionText,
+      answers: answers
+    });
+    console.log(payload);
+    this.http.post(this.QNAURL, payload, this.generateHttpHeaders()).subscribe(
+      data => {
+        // Reset errors.
+        this.errors = [];
+        console.log('Success', data);
+        // newQna.delete();
+        this.qnaForm['controls']['newQna']['removeAt'](indexOfQuestion);
+        this.addToQNAForm(data);
+      },
+      err => {
+        console.log('This is the error', err);
+        this.errors = err.error;
+        console.log(err.error);
+      });
+
+  }
+
+  addNewAnswerField(newQna: any) {
+    const answersField = newQna.get('answers') as FormArray;
+    answersField.push(this.fb.group({
+          // When editAnswer is true, give ability to edit question.
+          answerText: '',
+          errors: null,
+        }));
   }
 }
