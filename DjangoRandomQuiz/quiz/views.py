@@ -407,6 +407,8 @@ class QuestionAnswerAPIView(QuizViewSet):
             topic_id = serializer.validated_data['topic']
             question_text = serializer.validated_data['question']
             list_of_answer_text = serializer.validated_data['answers']
+            list_of_wrong_answer_text = serializer.validated_data.get('wrong_answers') or []
+
             try:
                 # Get the relevant topic.
                 topic = self.topic_queryset().get(id=topic_id)
@@ -425,16 +427,30 @@ class QuestionAnswerAPIView(QuizViewSet):
                     new_answer = Answer.objects.create(text=answer_text, creator=user)
                     list_of_answer_instances.append(new_answer)
 
+            # Get wrong answers
+            list_of_wrong_answer_instances = []
+            for answer_text in list_of_wrong_answer_text:
+                if self.answer_queryset().filter(text=answer_text):
+                    # If the answer already exists, for this user, we will use this answer.
+                    list_of_wrong_answer_instances.append(self.answer_queryset().get(text=answer_text))
+                else:
+                    # Otherwise, we create a new answer object.
+                    new_answer = Answer.objects.create(text=answer_text, creator=user)
+                    list_of_wrong_answer_instances.append(new_answer)
+
             # If the question already exists in the database, we will just add the topic and the answers to this question
             if self.question_queryset().filter(text=question_text):
                 question = Question.objects.get(text=question_text)
                 question.topic.add(topic)
                 question.answers.add(*list_of_answer_instances)
+                question.wrong_answers.add(*list_of_wrong_answer_instances)
             else:
                 # Otherwise, create a new question then add to the database.
                 question = Question.objects.create(text=question_text, creator=user)
                 question.topic.add(topic)
                 question.answers.add(*list_of_answer_instances)
+                question.wrong_answers.add(*list_of_wrong_answer_instances)
+
             # Save the question to the database.
             question.save()
 
@@ -442,7 +458,8 @@ class QuestionAnswerAPIView(QuizViewSet):
                 'topic': topic.id,
                 'question_id': question.id,
                 'question_text': question.text,
-                'answers': []
+                'answers': [],
+                'wrong_answers': [],
             }
 
             for answer in question.answers.all():
@@ -451,6 +468,14 @@ class QuestionAnswerAPIView(QuizViewSet):
                     'answer_text': answer.text,
                 }
                 response_dict['answers'].append(answer_dict)
+
+            for answer in question.wrong_answers.all():
+                wrong_answer_dict = {
+                    'answer_id': answer.id,
+                    'answer_text': answer.text,
+                }
+                response_dict['wrong_answers'].append(wrong_answer_dict)
+
             return Response(response_dict, status=status.HTTP_201_CREATED)
 
         # Compile all errors into an error_description
