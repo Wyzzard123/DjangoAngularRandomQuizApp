@@ -126,7 +126,7 @@ class Topic(UUIDAndTimeStampAbstract):
         no_of_questions = no_of_questions if no_of_questions <= max_questions else max_questions
 
         max_choices = quiz_topic.max_choices()
-        no_of_choices = no_of_choices if no_of_choices <= max_choices else max_choices
+        no_of_choices = min(no_of_choices, max_choices)
 
         # Get the required number of questions in the right order.
         # Order by ('?') allows us to scramble the data randomly.
@@ -140,24 +140,46 @@ class Topic(UUIDAndTimeStampAbstract):
             if question.has_one_answer():
                 question_type = "radio"
                 correct_answer = question.answer
+
                 no_of_wrong_choices = no_of_choices - 1
 
-                possible_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
+                # Set fixed wrong answers
+                fixed_wrong_answers = question.wrong_answers.all()
+                no_of_fixed_wrong_choices = min(fixed_wrong_answers.count(), no_of_wrong_choices)
+                fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
 
-                wrong_choices = generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices)
-                all_choices = [correct_answer.text, *wrong_choices]
+                # Set random wrong answers
+                no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
+                possible_random_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
+
+                # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
+                for fixed_wrong_choice in fixed_wrong_choices:
+                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_choice.id)
+
+                random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices,
+                                                                      no_of_random_wrong_choices)
+
+                all_choices = [correct_answer.text, *fixed_wrong_choices, *random_wrong_choices]
+
             else:
                 question_type = "checkbox"
                 correct_answers = question.answers.all()
 
-                possible_wrong_choices = quiz_choices
+                # Set fixed wrong answers
+                fixed_wrong_answers = question.wrong_answers.all()
+                no_of_fixed_wrong_answers = fixed_wrong_answers.count()
+
+                possible_random_wrong_choices = quiz_choices
                 # Chain .exclude() to exclude all correct answers from the set of wrong_choices.
                 for correct_answer in correct_answers:
-                    possible_wrong_choices = possible_wrong_choices.exclude(id=correct_answer.id)
+                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=correct_answer.id)
+                # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
+                for fixed_wrong_answer in fixed_wrong_answers:
+                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
 
                 # We have to calibrate the number of correct answers based on the max number of wrong choices. If we have
                 #  too few possible wrong choices, we cannot have too few correct answers.
-                max_no_of_wrong_choices = len(possible_wrong_choices)
+                max_no_of_wrong_choices = len(possible_random_wrong_choices) + no_of_fixed_wrong_answers
                 # We will make sure to have at least one correct answer.
                 min_no_of_correct_answers = max(1, no_of_choices - max_no_of_wrong_choices)
 
@@ -177,10 +199,14 @@ class Topic(UUIDAndTimeStampAbstract):
                 # No of wrong choices will be no of choices minus no of correct answers.
                 no_of_wrong_choices = no_of_choices - no_of_correct_answers
 
-                wrong_choices = generate_list_of_wrong_choices(possible_wrong_choices, no_of_wrong_choices)
+                no_of_fixed_wrong_choices = min(no_of_fixed_wrong_answers, no_of_wrong_choices)
+                fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
+
+                no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
+                random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices, no_of_random_wrong_choices)
                 correct_answers = random.sample([correct_answer.text for correct_answer in correct_answers],
                                                 no_of_correct_answers)
-                all_choices = [*correct_answers, *wrong_choices]
+                all_choices = [*correct_answers, *fixed_wrong_choices, *random_wrong_choices]
             # all_choices = [choice for choice in all_choices]
             # Shuffle the list of choices
             random.shuffle(all_choices)
