@@ -2,6 +2,7 @@ import random
 import uuid
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from functools import reduce
@@ -222,8 +223,15 @@ class Question(UUIDAndTimeStampAbstract):
     creator = models.ForeignKey(User, verbose_name="Creator", related_name="questions", on_delete=models.CASCADE)
     topic = models.ManyToManyField(Topic, related_name="questions")
     answers = models.ManyToManyField(Answer, related_name="questions")
-    wrong_answers = models.ManyToManyField(Answer, related_name="wrong_questions")
+    wrong_answers = models.ManyToManyField(Answer, related_name="wrong_questions", blank=True)
     text = models.TextField(verbose_name="Text")
+
+    def clean(self, *args, **kwargs):
+        # If there are correct answers in the wrong_answers, raise an error
+        # TODO - This validation currently does not work properly in the admin page.
+        if self.answers.all() & self.wrong_answers.all():
+            raise ValidationError({"wrong_answers": "Wrong answers should not be contained in the correct answers"})
+        return super().clean()
 
     def has_one_answer(self):
         return self.answers.count() == 1
