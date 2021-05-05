@@ -369,7 +369,8 @@ class QuestionAnswerAPIView(QuizViewSet):
             question_dict = {
                 'question_id': question.id,
                 'question_text': question.text,
-                'answers': []
+                'answers': [],
+                'wrong_answers': []
             }
             for answer in question.answers.all():
                 answer_dict = {
@@ -377,6 +378,13 @@ class QuestionAnswerAPIView(QuizViewSet):
                     'answer_text': answer.text,
                 }
                 question_dict['answers'].append(answer_dict)
+
+            for wrong_answer in question.wrong_answers.all():
+                wrong_answer_dict = {
+                    'answer_id': wrong_answer.id,
+                    'answer_text': wrong_answer.text
+                }
+                question_dict['wrong_answers'].append(wrong_answer_dict)
             response_dict['qna'].append(question_dict)
 
         return Response(response_dict, status=status.HTTP_200_OK)
