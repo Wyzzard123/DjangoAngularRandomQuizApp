@@ -237,6 +237,36 @@ export class EditQNAService {
         answer.patchValue({
           editAnswer: false,
           answerText: answer.value.answerText,
+        });
+      },
+      err => {
+        console.log('This is the error', err);
+        this.errors = err.error;
+        answer.patchValue({errors: err.error});
+        console.log(answer.controls.error);
+      });
+
+  }
+
+  addAnswer(qna: any, answer: any) {
+    // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
+// const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: newQna.value.questionText,
+//       answers: answers
+//     });
+    console.log(qna)
+    console.log(answer)
+    // Note, the answers will be added by Django.
+    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: qna.value.questionText, answers: [answer.value.answerText]});
+    console.log(payload);
+    this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.QNAURL, payload, this.generateHttpHeaders()).subscribe(
+      data => {
+        // Reset errors.
+        this.errors = [];
+        console.log('Success', data);
+        answer.patchValue({
+          editAnswer: false,
+          answerText: answer.value.answerText,
+          answerId: data['answer_id']
         })
       },
       err => {
@@ -262,23 +292,28 @@ export class EditQNAService {
         question_id: qna.value.questionId
       }
     };
-    this.http.delete(this.AnswerURL + `${answer.value.answerId}/`, options).subscribe(
-      data => {
-        // Reset errors.
-        this.errors = [];
-        console.log('Success', data);
-        // Remove from the qnaForm. See https://stackoverflow.com/questions/46707026/typescript-formgroup-formarray-remove-only-one-element-object-by-value-angul
-        // Reason for using this weird syntax is that the normal syntax gives the following error:
-        //     ERROR in src/app/edit-qna.service.ts:142:35 - error TS2339: Property 'removeAt' does not exist on type 'AbstractControl'.
-        //          142         this.qnaForm.controls.qna.removeAt(this.qnaForm.value.qna.findIndex(qnaToRemove => qnaToRemove.questionId === qna.questionId));
-        this.qnaForm['controls']['qna']['controls'][indexOfQuestion]['controls']['answers']['removeAt'](indexOfAnswer);
-      },
-      err => {
-        console.log('This is the error', err);
-        this.errors = err.error;
-        answer.patchValue({errors: err.error});
-        console.log(answer);
-      });
+
+    if (answer.value.answerId) {
+      this.http.delete(this.AnswerURL + `${answer.value.answerId}/`, options).subscribe(
+        data => {
+          // Reset errors.
+          this.errors = [];
+          console.log('Success', data);
+          // Remove from the qnaForm. See https://stackoverflow.com/questions/46707026/typescript-formgroup-formarray-remove-only-one-element-object-by-value-angul
+          // Reason for using this weird syntax is that the normal syntax gives the following error:
+          //     ERROR in src/app/edit-qna.service.ts:142:35 - error TS2339: Property 'removeAt' does not exist on type 'AbstractControl'.
+          //          142         this.qnaForm.controls.qna.removeAt(this.qnaForm.value.qna.findIndex(qnaToRemove => qnaToRemove.questionId === qna.questionId));
+          this.qnaForm['controls']['qna']['controls'][indexOfQuestion]['controls']['answers']['removeAt'](indexOfAnswer);
+        },
+        err => {
+          console.log('This is the error', err);
+          this.errors = err.error;
+          answer.patchValue({errors: err.error});
+          console.log(answer);
+        });
+    } else {
+      this.qnaForm['controls']['qna']['controls'][indexOfQuestion]['controls']['answers']['removeAt'](indexOfAnswer);
+    }
   }
 
   deleteNewQuestion(qna: any, indexOfQuestion: any) {
@@ -327,12 +362,14 @@ export class EditQNAService {
 
   }
 
-  addNewAnswerField(newQna: any) {
-    const answersField = newQna.get('answers') as FormArray;
+  addNewAnswerField(qna: any) {
+    const answersField = qna.get('answers') as FormArray;
     answersField.push(this.fb.group({
           // When editAnswer is true, give ability to edit question.
           answerText: '',
           errors: null,
+          editAnswer: true,
+          answerId: null
         }));
   }
 }
