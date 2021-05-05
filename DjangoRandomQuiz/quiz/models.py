@@ -222,6 +222,7 @@ class Question(UUIDAndTimeStampAbstract):
     creator = models.ForeignKey(User, verbose_name="Creator", related_name="questions", on_delete=models.CASCADE)
     topic = models.ManyToManyField(Topic, related_name="questions")
     answers = models.ManyToManyField(Answer, related_name="questions")
+    wrong_answers = models.ManyToManyField(Answer, related_name="wrong_questions")
     text = models.TextField(verbose_name="Text")
 
     def has_one_answer(self):
