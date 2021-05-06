@@ -113,6 +113,7 @@ export class EditQNAService {
           errors: null,
         }));
       }
+
       qnaField.push(questionGroup);
     }
     console.log(this.qnaForm);
@@ -256,20 +257,21 @@ export class EditQNAService {
     console.log(qna)
     console.log(answer)
     // Note, the answers will be added by Django.
-    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: qna.value.questionText, answers: [answer.value.answerText]});
-    console.log(payload);
-    this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.QNAURL, payload, this.generateHttpHeaders()).subscribe(
-      data => {
-        // Reset errors.
+
+    const createAnswerPayload = JSON.stringify({text: answer.value.answerText, questions: [qna.value.questionId]});
+    console.log(createAnswerPayload);
+
+    this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.AnswerURL, createAnswerPayload, this.generateHttpHeaders()).subscribe(
+         data => {
         this.errors = [];
         console.log('Success', data);
         answer.patchValue({
           editAnswer: false,
           answerText: answer.value.answerText,
-          answerId: data['answer_id']
-        })
-      },
-      err => {
+          answerId: data['id']
+        });
+
+        }, err => {
         console.log('This is the error', err);
         this.errors = err.error;
         answer.patchValue({errors: err.error});
