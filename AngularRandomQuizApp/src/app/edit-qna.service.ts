@@ -276,7 +276,7 @@ export class EditQNAService {
     console.log(answer)
     // Note, the answers will be added by Django.
 
-    const createAnswerPayload = JSON.stringify({text: answer.value.answerText, questions: [qna.value.questionId]});
+    const createAnswerPayload = JSON.stringify({text: answer.value.answerText, questions: [qna.value.questionId], correct: answer.value.correct});
     console.log(createAnswerPayload);
 
     this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.AnswerURL, createAnswerPayload, this.generateHttpHeaders()).subscribe(
@@ -286,7 +286,8 @@ export class EditQNAService {
         answer.patchValue({
           editAnswer: false,
           answerText: answer.value.answerText,
-          answerId: data['id']
+          answerId: data['id'],
+          correct: answer.value.correct
         });
 
         }, err => {

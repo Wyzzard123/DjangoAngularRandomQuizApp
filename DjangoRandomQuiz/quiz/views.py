@@ -183,6 +183,71 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
         """Only search questions from what the user has created."""
         return Question.objects.filter(creator=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        correct = request.data.get('correct')
+
+        answer_text = request.data['text']
+
+        # Remove any question_id that is not in the question_queryset
+        question_id_set = set(request.data['questions'])
+        for question_id in request.data['questions']:
+            if not self.question_queryset().filter(id=question_id):
+                question_id_set.remove(question_id)
+        request.data['questions'] = list(question_id_set)
+
+        if not request.data['questions']:
+            return Response({"error_description": "You must pass in a valid question"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        questions = self.question_queryset().filter(id__in=request.data['questions'])
+
+        # If we have an old answer with the same text, update this instead. Otherwise, create an answer as per normal.
+        if self.get_queryset().filter(text=answer_text):
+            answer = self.get_queryset().filter(text=answer_text).get()
+
+            for question in questions:
+                # Check if answer is already in the question's answers or wrong answers:
+                if correct is True or correct is None:
+                    if question.answers.filter(id=answer.id):
+                        # If so, do not do anything.
+                        continue
+                    elif question.wrong_answers.filter(id=answer.id):
+                        # If the answer is in the wrong answers, swap it around
+                        question.wrong_answers.remove(answer)
+                        question.answers.add(answer)
+                    else:
+                        question.answers.add(answer)
+                else:
+                    if question.wrong_answers.filter(id=answer.id):
+                        continue
+                    elif question.answers.filter(id=answer.id):
+                        question.answers.remove(answer)
+                        question.wrong_answers.add(answer)
+                    else:
+                        question.wrong_answers.add(answer)
+        # If this answer is completely new:
+        else:
+            # Create as per normal if the answer is meant to be correct.
+            if correct is True or correct is None:
+                return super().create(request, *args, **kwargs)
+            # Create a wrong answer
+            else:
+                answer = Answer.objects.create(creator=request.user, text=answer_text)
+
+                # Add the answer to the wrong answer set
+                for question in questions:
+                    question.wrong_answers.add(answer)
+
+        response_dict = {
+            'id': answer.id,
+            'creator': answer.creator.id,
+            'text': answer_text,
+            'questions': [question.id for question in answer.questions.all()],
+            'correct': correct
+        }
+
+        return Response(response_dict, status=status.HTTP_200_OK)
+
     def update(self, request, *args, **kwargs):
         """
         If we update, first check whether the answer is connected to more than one question.
