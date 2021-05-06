@@ -154,6 +154,7 @@ export class EditQNAService {
         editAnswer: false,
         answerText: answer.answer_text,
         answerId: answer.answer_id,
+        correct: answer.correct,
         errors: null,
       }));
       qnaField.push(questionGroup);

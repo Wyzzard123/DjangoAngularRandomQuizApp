@@ -602,6 +602,7 @@ class QuestionAnswerAPIView(QuizViewSet):
                 answer_dict = {
                     'answer_id': answer.id,
                     'answer_text': answer.text,
+                    'correct': True
                 }
                 response_dict['answers'].append(answer_dict)
 
@@ -609,6 +610,7 @@ class QuestionAnswerAPIView(QuizViewSet):
                 wrong_answer_dict = {
                     'answer_id': answer.id,
                     'answer_text': answer.text,
+                    'correct': False
                 }
                 response_dict['wrong_answers'].append(wrong_answer_dict)
 
