@@ -147,6 +147,8 @@ export class EditQNAService {
       answers: this.fb.array([]),
     });
     const questionGroupAnswers = questionGroup.get('answers') as FormArray;
+
+    // Add correct answers
     for (const answer of question.answers) {
       // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
       questionGroupAnswers.push(this.fb.group({
@@ -154,11 +156,27 @@ export class EditQNAService {
         editAnswer: false,
         answerText: answer.answer_text,
         answerId: answer.answer_id,
-        correct: answer.correct,
+        correct: true,
         errors: null,
       }));
       qnaField.push(questionGroup);
     }
+
+    // Add wrong answers
+    for (const answer of question.wrong_answers) {
+      // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
+      questionGroupAnswers.push(this.fb.group({
+        // When editAnswer is true, give ability to edit question.
+        editAnswer: false,
+        answerText: answer.answer_text,
+        answerId: answer.answer_id,
+        correct: false,
+        errors: null,
+      }));
+
+      qnaField.push(questionGroup);
+    }
+
     console.log(this.qnaForm);
   }
 
@@ -357,12 +375,17 @@ export class EditQNAService {
      //     "<answer_text_3>"]}' "127.0.0.1:8000/api/qna/"
     console.log(newQna);
     const answers = [];
+    const wrongAnswers = [];
     for (const answer of newQna.value.answers) {
-      answers.push(answer.answerText);
+      if (answer.correct){
+        answers.push(answer.answerText);
+      } else {
+        wrongAnswers.push(answer.answerText);
+      }
     }
 
     const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: newQna.value.questionText,
-      answers: answers
+      answers: answers, wrong_answers: wrongAnswers
     });
     console.log(payload);
     this.http.post(this.QNAURL, payload, this.generateHttpHeaders()).subscribe(

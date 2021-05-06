@@ -34,6 +34,11 @@ class QuestionAnswerSerializer(serializers.Serializer):
         child=serializers.CharField(max_length=None)
     )
 
+    # We will have a list of wrong answers as wel.
+    wrong_answers = serializers.ListField(
+        child=serializers.CharField(max_length=None)
+    )
+
 
 class QuizSerializer(serializers.Serializer):
     """

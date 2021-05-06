@@ -109,7 +109,15 @@
                             (input)="answer.value.answerText = newAnswerTextField.value" formControlName="answerText"
                             [value]="answer.value.answerText"
                             placeholder="Add an answer. You must have at least one answer."></textarea>
-                  <button (click)="_editQNA.deleteNewAnswer(newQna, answer, i, j)"
+                  <div>
+                  <input [type]="'checkbox'"
+                         [name]="answer.value.answerId" formControlName="correct" [value]="answer.value.correct"
+                         (change)="onSelectCheckbox(answer, 'correct')"
+                         [checked]="answer.value.correct">
+                  <label style="padding-left: 10px" *ngIf="answer.value.correct" class="correct">Correct</label>
+                  <label style="padding-left: 10px" *ngIf="!answer.value.correct" class="wrong">Wrong</label>
+                  </div>
+                    <button (click)="_editQNA.deleteNewAnswer(newQna, answer, i, j)"
                           class="btn btn-danger ml-auto" *ngIf="j != 0">Delete
                     Answer
                   </button>
