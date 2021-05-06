@@ -153,8 +153,8 @@ class Topic(UUIDAndTimeStampAbstract):
                 possible_random_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
 
                 # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
-                for fixed_wrong_choice in fixed_wrong_choices:
-                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_choice.id)
+                for fixed_wrong_answer in fixed_wrong_answers:
+                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
 
                 random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices,
                                                                       no_of_random_wrong_choices)
@@ -190,7 +190,11 @@ class Topic(UUIDAndTimeStampAbstract):
                 # Randomly allocate the number of correct answers with a number between the minimum and maximum number of
                 #  correct answers.
                 if not show_all_alternative_answers:
-                    no_of_correct_answers = random.randint(min_no_of_correct_answers, max_no_of_correct_answers)
+                    try:
+                        no_of_correct_answers = random.randint(min_no_of_correct_answers, max_no_of_correct_answers)
+                    except ValueError:
+                        print(f"WARNING: Empty question: '{question_text}'")
+                        continue
                 else:
                     # If we say show_all_alternative_answers, we will either show all the correct answers or the max no of
                     #  choices per question, depending on which is lower.
