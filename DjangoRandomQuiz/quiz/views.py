@@ -122,7 +122,7 @@ class QuestionAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewset
             else:
                 # Otherwise, create a new answer object and add that to the question.
                 new_question = Question.objects.create(text=updated_question_text,
-                                                   creator=self.request.user)
+                                                       creator=self.request.user)
                 topic.questions.add(new_question)
             response_dict = {
                 'id': new_question.id,
@@ -167,6 +167,7 @@ class QuestionAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewset
                 #  question.
                 question.topic.remove(topic)
                 return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.ModelViewSet):
     """View to create, read, update and destroy ALL answers belonging to a user"""
@@ -366,11 +367,13 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                 answer.questions.remove(question)
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class QuizViewSet(viewsets.ViewSet):
     """
     Defines a queryset for the topic, answer and question models restricted to the current user. The
     generate quiz method will use this.
     """
+
     def topic_queryset(self):
         """Only search topics from what the user has created."""
         return Topic.objects.filter(creator=self.request.user)
@@ -620,6 +623,7 @@ class CheckQuizAnswersAPIView(QuizViewSet):
          --data '{"answers":[[answer_text_1], [answer_text_2_1, answer_text_2_2], ...]}'
          "<url>/api/attempt_quiz/<quiz_id>/"
     """
+
     def quiz_queryset(self):
         """Only search topics from what the user has created."""
         return Quiz.objects.filter(creator=self.request.user)
@@ -658,4 +662,4 @@ class UserCreateView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
     # Anyone should be able to register.
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
