@@ -102,9 +102,11 @@ export class NewQuizComponent implements OnInit {
     this._newQuiz.generateQuiz(this.quizSettings);
   }
 
-  onSelectCheckbox(choice): any {
+  onSelectCheckbox(choice, field= 'selected'): any {
     // If we select a checkbox, change the value to from true to false if it was already selected and vice versa.
-    choice.patchValue({selected: !this.str_to_boolean(choice.value.selected)});
+    // Use [] to access an object by key variable instead of literals (ie if you use field instead of [field], this will
+    // be interpreted as a string literal "field" instead of the argument for field.
+    choice.patchValue({[field]: !this.str_to_boolean(choice.value[field])});
   }
 
   onSelectRadio(qna: any, choice: any): any {

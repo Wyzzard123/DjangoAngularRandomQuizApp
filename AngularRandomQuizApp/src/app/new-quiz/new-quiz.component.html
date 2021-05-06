@@ -159,7 +159,7 @@
                 <div [formGroupName]="j">
                   <!--            Use fieldset to disable form-->
                   <fieldset>
-                    <li>{{answer.value.answerText}} <a (click)="_editQNA.toggleEditQNAAnswerMode(answer)"
+                    <li><span [ngClass]="{'correct': answer.value.correct, 'wrong': answer.value.correct == false}">{{answer.value.answerText}} </span> <a (click)="_editQNA.toggleEditQNAAnswerMode(answer)"
                                                        href="javascript:void(0)">
                       <span *ngIf="!answer.value.editAnswer && answer.value.answerId"><strong>(Edit Answer)</strong></span>
                       <span *ngIf="!answer.value.editAnswer && !answer.value.answerId" style="color: red"><strong>(Edit Answer - NOT ADDED)</strong></span>
@@ -169,6 +169,20 @@
                   <textarea #answerTextField class="form-control" rows="3"
                             (input)="answer.value.answerText = answerTextField.value" formControlName="answerText"
                             [value]="answer.value.answerText" *ngIf="answer.value.editAnswer"></textarea>
+                  <div *ngIf="answer.value.editAnswer">
+                  <input [type]="'checkbox'"
+                         [name]="answer.value.answerId" formControlName="correct" [value]="answer.value.correct"
+                         (change)="onSelectCheckbox(answer, 'correct')" *ngIf="answer.value.editAnswer"
+                         [checked]="answer.value.correct">
+                  <label style="padding-left: 10px" *ngIf="answer.value.correct" class="correct">Correct</label>
+                  <label style="padding-left: 10px" *ngIf="!answer.value.correct" class="wrong">Wrong</label>
+                  </div>
+
+                  <fieldset>
+
+                </fieldset>
+
+
                   <div *ngIf="answer.value.editAnswer">
                     <button (click)="_editQNA.editAnswer(qna, answer)" class="btn btn-primary ml-auto" *ngIf="answer.value.answerId">Save Changes
                     </button>

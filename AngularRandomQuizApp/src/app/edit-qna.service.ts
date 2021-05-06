@@ -79,6 +79,7 @@ export class EditQNAService {
           // When editAnswer is true, give ability to edit question.
           answerText: '',
           errors: null,
+          correct: true
         }));
     newQNAField.push(questionGroup);
     console.log("QNA FORM ");
@@ -110,6 +111,21 @@ export class EditQNAService {
           editAnswer: false,
           answerText: answer.answer_text,
           answerId: answer.answer_id,
+          correct: true,
+          errors: null,
+        }));
+      }
+      console.log("WRONG ANSWERS")
+      console.log(question.wrong_answers)
+
+      for (const answer of question.wrong_answers) {
+        // Every choice will start off as unselected. Whenever we choose the choice, we will update the selected field.
+        questionGroupAnswers.push(this.fb.group({
+          // When editAnswer is true, give ability to edit question.
+          editAnswer: false,
+          answerText: answer.answer_text,
+          answerId: answer.answer_id,
+          correct: false,
           errors: null,
         }));
       }
@@ -229,7 +245,9 @@ export class EditQNAService {
     // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
 
     // Note, the answers will be added by Django.
-    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: answer.value.answerText});
+    console.log("CORRECT")
+    console.log(answer.value.correct)
+    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: answer.value.answerText, correct: answer.value.correct, question_id: qna.value.questionId});
     this.http.put(this.AnswerURL + `${answer.value.answerId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         // Reset errors.
@@ -371,7 +389,8 @@ export class EditQNAService {
           answerText: '',
           errors: null,
           editAnswer: true,
-          answerId: null
+          answerId: null,
+          correct: true,
         }));
   }
 }

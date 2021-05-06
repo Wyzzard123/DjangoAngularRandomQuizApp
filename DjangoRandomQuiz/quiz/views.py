@@ -94,7 +94,16 @@ class QuestionAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewset
                 # If 'prefetch_related' has been applied to a queryset, we need to
                 # forcibly invalidate the prefetch cache on the instance.
                 question._prefetched_objects_cache = {}
-            return Response(serializer.data)
+
+            response_dict = {
+                'id': question.id,
+                'creator': question.creator.id,
+                'text': serializer.validated_data['text'],
+                'topic': [topic.id for topic in question.topic.all()],
+                'answers': [answer.id for answer in question.answers.all()]
+            }
+
+            return Response(response_dict, status=status.HTTP_200_OK)
         else:
             if not topic:
                 return Response({"error_description": "As there are multiple topics with this question, "
@@ -197,6 +206,11 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                 # Topic does not exist.
                 return Response({"error_description": "Question Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if the answer is meant to be correct
+        correct = None
+        if request.data.get('correct') is not None:
+            correct = request.data.pop('correct')
+
         request.data.update({
             'questions': [question.id for question in answer.questions.all()],
             # TODO - This should be in a mixin, but right now it doesnt work.
@@ -205,20 +219,62 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
 
         partial = kwargs.pop('partial', False)
         serializer = self.get_serializer(answer, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
+        # serializer.is_valid(raise_exception=True)
 
-        # The new answer text.
-        updated_answer_text = serializer.validated_data['text']
+        # The new answer text. Use strip() as is_valid() will do this as well.
+        updated_answer_text = request.data['text'].strip()
 
-        if answer.questions.count() <= 1:
+        if answer.questions.count() + answer.wrong_questions.count() <= 1:
+            # TODO - Check for whether we have an old answer.
+
+            if answer.questions.count() + answer.wrong_questions.count() == 0 and question is None:
+                return Response({"error_description": "This is a new answer. You must pass in a question_id"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            elif answer.questions.count() + answer.wrong_questions.count() == 1 and question is None:
+                if answer.questions.all():
+                    question = answer.questions.get()
+                else:
+                    question = answer.wrong_questions.get()
+
             # If the answer being updated has only one question (or none), then simply perform update as per the normal API
-            #  update view.
-            self.perform_update(serializer)
-            if getattr(answer, '_prefetched_objects_cache', None):
-                # If 'prefetch_related' has been applied to a queryset, we need to
-                # forcibly invalidate the prefetch cache on the instance.
-                answer._prefetched_objects_cache = {}
-            return Response(serializer.data)
+            #  update view if there is no question with the same updated answer text.
+            if not self.get_queryset().filter(text=updated_answer_text):
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                if getattr(answer, '_prefetched_objects_cache', None):
+                    # If 'prefetch_related' has been applied to a queryset, we need to
+                    # forcibly invalidate the prefetch cache on the instance.
+                    answer._prefetched_objects_cache = {}
+            else:
+                # If there is an old answer with the same text, we will delete the current answer (since there is 0 or
+                # one question that reference(s) it) then reference the old answer instead:
+
+                # Try to get the old answer first. If we get an error, then we will not delete the previously referenced
+                #  answer.
+                new_answer = self.get_queryset().filter(text=updated_answer_text).get()
+
+                # Delete the old answer and reference the new one.
+                answer.delete()
+                answer = new_answer
+
+            # If the answer has been changed to wrong or right, switch the answer around.
+            if correct is True and question.wrong_answers.filter(id=answer.id):
+                question.wrong_answers.remove(answer)
+                question.answers.add(answer)
+
+            if correct is False and question.answers.filter(id=answer.id):
+                question.answers.remove(answer)
+                question.wrong_answers.add(answer)
+
+            response_dict = {
+                'id': answer.id,
+                'creator': answer.creator.id,
+                'text': updated_answer_text,
+                'questions': [question.id for question in answer.questions.all()],
+                'correct': correct
+            }
+
+            return Response(response_dict, status.HTTP_200_OK)
         else:
             if not question:
                 return Response({"error_description": "As there are multiple questions with this answer, "
@@ -233,17 +289,29 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                 # If the updated answer text matches another answer already in the database, add that to the existing
                 #  question.
                 new_answer = self.get_queryset().get(text=updated_answer_text)
-                question.answers.add(new_answer)
+
             else:
+                # TODO - Correct is being returned as null
                 # Otherwise, create a new answer object and add that to the question.
                 new_answer = Answer.objects.create(text=updated_answer_text,
                                                    creator=self.request.user)
+
+            # Add to correct or wrong answers
+            if correct is True or correct is None:
                 question.answers.add(new_answer)
+            else:
+                # Check that the answer isn't already in the correct answers of the question. Ifit is, remove it.
+                if new_answer in question.answers.all():
+                    question.answers.remove(new_answer)
+
+                question.wrong_answers.add(new_answer)
+
             response_dict = {
                 'id': new_answer.id,
                 'creator': new_answer.creator.id,
-                'text': new_answer.text,
-                'questions': [question.id for question in new_answer.questions.all()]
+                'text': updated_answer_text,
+                'questions': [question.id for question in new_answer.questions.all()],
+                'correct': correct
             }
             # Return the new updated answer as a dict.
             return Response(response_dict, status=status.HTTP_200_OK)
