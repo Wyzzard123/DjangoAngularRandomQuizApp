@@ -9,3 +9,7 @@ restless==2.1.1
 # For authentication
 django-oauth-toolkit==1.3.2
 django-cors-middleware==1.5.0
+
+djangorestframework==3.12.4
+whitenoise==5.2.0
+gunicorn==20.0.4
