@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+
+  angular:
+    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp
+#    env_file:
+#      - .env
+    ports:
+      - "4200:80"
+
+  django:
+    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp
+#    env_file:
+#      - .env
+    ports:
+      - "9000:8000"

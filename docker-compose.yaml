@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+
+  angular:
+    build:
+      context: AngularRandomQuizApp/
+      dockerfile: Dockerfile
+#    env_file:
+#      - .env
+    ports:
+      - "4200:80"
+
+  django:
+    build:
+      context: DjangoRandomQuiz/
+      dockerfile: Dockerfile
+#    env_file:
+#      - .env
+    ports:
+      - "9000:8000"
