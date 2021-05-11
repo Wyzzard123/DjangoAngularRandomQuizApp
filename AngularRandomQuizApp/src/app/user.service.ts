@@ -31,7 +31,7 @@ export class UserService {
   errors: any = [];
 
   // The API URL to get a token (eg http://localhost:8000/o/token)
-  tokenUrl = `${environment.API_URL}/o/token/`;
+  tokenUrl = `${environment.API_URL}/oauth/token/`;
 
   httpFormHeaders = new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded'});
 
