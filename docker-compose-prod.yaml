@@ -3,14 +3,14 @@ version: '3'
 services:
 
   angular:
-    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp
+    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp/angular:master
 #    env_file:
 #      - .env
     ports:
       - "4200:80"
 
   django:
-    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp
+    image: registry.avodaq.com/wkimchan/djangoangularrandomquizapp/django:master
 #    env_file:
 #      - .env
     ports:
