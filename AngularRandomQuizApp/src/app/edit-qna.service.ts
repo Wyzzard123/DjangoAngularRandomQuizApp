@@ -173,9 +173,8 @@ export class EditQNAService {
         correct: false,
         errors: null,
       }));
-
-      qnaField.push(questionGroup);
     }
+    qnaField.push(questionGroup);
 
     console.log(this.qnaForm);
   }
