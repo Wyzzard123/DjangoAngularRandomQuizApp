@@ -160,7 +160,6 @@ export class EditQNAService {
         errors: null,
       }));
     }
-    qnaField.push(questionGroup);
 
     // Add wrong answers
     for (const answer of question.wrong_answers) {
