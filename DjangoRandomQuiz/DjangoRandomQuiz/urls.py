@@ -35,7 +35,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # path('api/topics/', include(TopicResource.urls())),
     # Oauth links
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('oauth/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
     # The obtain_auth_token view will return a JSON response when valid username and password fields are POSTed to the
     # view using form data or JSON:

@@ -66,7 +66,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware'
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware"
 ]
 
 # Use the oauth toolkit's oauth tokens instead of the django rest framework tokens.
@@ -156,6 +157,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+STATIC_ROOT = str(Path(BASE_DIR, "static/"))
 STATIC_URL = env(
         'STATIC_URL',
         cast=str,
