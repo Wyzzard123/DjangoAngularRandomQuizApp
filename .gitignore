@@ -1,3 +1,4 @@
 .idea
 __pycache__
 DjangoRandomQuiz/ignore_this
+DjangoRandomQuiz/static
