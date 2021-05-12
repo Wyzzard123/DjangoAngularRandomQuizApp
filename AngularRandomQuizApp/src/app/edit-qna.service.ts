@@ -159,8 +159,8 @@ export class EditQNAService {
         correct: true,
         errors: null,
       }));
-      qnaField.push(questionGroup);
     }
+    qnaField.push(questionGroup);
 
     // Add wrong answers
     for (const answer of question.wrong_answers) {
