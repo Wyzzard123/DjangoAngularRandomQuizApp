@@ -1,5 +1,8 @@
 version: '3'
 
+volumes:
+  sql_data:
+
 services:
 
   angular:
@@ -18,19 +21,21 @@ services:
     volumes:
       - /etc/avodaq/randomquiz/.env:/app/config/.env
       
+    depends_on:
+      - sql
+
 #  Possibly add the following Docker container for Postgres Database:
-#
-#  sql:
-#    image: postgres:9.6.13-alpine
-#    environment:
-#      POSTGRES_DB: djangodb
-#      POSTGRES_USER: django
-#      POSTGRES_PASSWORD: INSERT_DATABASE_PASSWORD
-#    volumes:
-#      - sql_data:/var/lib/postgresql/data
-#    ports:
-#      # Use a different port from other postgres databases on the same server
-#      - "5433:5432"
+
+  sql:
+    image: postgres:9.6.13-alpine
+    environment:
+      POSTGRES_DB: djangodb
+      POSTGRES_USER: django
+    volumes:
+      - sql_data:/var/lib/postgresql/data
+    ports:
+      # Use a different port from other postgres databases on the same server
+      - "5433:5432"
 
 # Add the following line into .env:
-#  DATABASE_URL=postgres://django:INSERT_DATABASE_PASSWORD@sql:5433/djangodb
+#  DATABASE_URL=postgres://django@sql:5433/djangodb

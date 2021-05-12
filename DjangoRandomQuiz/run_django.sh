@@ -1,4 +1,13 @@
 #!/bin/sh
+
+echo 'Waiting for Postgres service to start...'
+while ! nc -z sql 5432
+do
+  echo 'Waiting .... '
+  sleep 1
+done
+echo 'Postgres Service Started'
+
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput
 python3 manage.py shell -c "exec(\"from django.contrib.auth import get_user_model\\nif not get_user_model().objects.filter(username='admin'):\\n get_user_model().objects.create_superuser('admin', 'admin@avodaq.com', 'Cisco1234*')\")"
