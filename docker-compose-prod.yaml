@@ -15,7 +15,9 @@ services:
 #      - .env
     ports:
       - "9000:8000"
-
+    volumes:
+      - /etc/avodaq/randomquiz/.env:/app/config/.env
+      
 #  Possibly add the following Docker container for Postgres Database:
 #
 #  sql:
