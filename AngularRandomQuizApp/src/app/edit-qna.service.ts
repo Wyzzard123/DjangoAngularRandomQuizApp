@@ -205,11 +205,11 @@ export class EditQNAService {
     });
   }
 
-  editQuestion(qna: any) {
+  editQuestion(qna: any, questionTextField: any) {
     // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
 
     // Note, the answers will be added by Django.
-    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: qna.value.questionText});
+    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: questionTextField.value});
     this.http.put(this.QuestionURL + `${qna.value.questionId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         // Reset errors.
@@ -217,7 +217,7 @@ export class EditQNAService {
         console.log('Success', data);
         qna.patchValue({
           editQuestion: false,
-          questionText: qna.value.questionText,
+          questionText: questionTextField.value,
         })
       },
       err => {
@@ -258,13 +258,13 @@ export class EditQNAService {
       });
   }
 
-  editAnswer(qna: any, answer: any) {
+  editAnswer(qna: any, answer: any, answerTextField: any) {
     // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
 
     // Note, the answers will be added by Django.
     console.log("CORRECT")
     console.log(answer.value.correct)
-    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: answer.value.answerText, correct: answer.value.correct, question_id: qna.value.questionId});
+    const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: answerTextField.value, correct: answer.value.correct, question_id: qna.value.questionId});
     this.http.put(this.AnswerURL + `${answer.value.answerId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         // Reset errors.
@@ -272,7 +272,7 @@ export class EditQNAService {
         console.log('Success', data);
         answer.patchValue({
           editAnswer: false,
-          answerText: answer.value.answerText,
+          answerText: answerTextField.value,
         });
       },
       err => {
@@ -284,7 +284,7 @@ export class EditQNAService {
 
   }
 
-  addAnswer(qna: any, answer: any) {
+  addAnswer(qna: any, answer: any, answerTextField: any) {
     // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
 // const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: newQna.value.questionText,
 //       answers: answers
@@ -293,7 +293,7 @@ export class EditQNAService {
     console.log(answer)
     // Note, the answers will be added by Django.
 
-    const createAnswerPayload = JSON.stringify({text: answer.value.answerText, questions: [qna.value.questionId], correct: answer.value.correct});
+    const createAnswerPayload = JSON.stringify({text: answerTextField.value, questions: [qna.value.questionId], correct: answer.value.correct});
     console.log(createAnswerPayload);
 
     this.http.post<{access_token: string, expires_in: number, refresh_token: string}>(this.AnswerURL, createAnswerPayload, this.generateHttpHeaders()).subscribe(
@@ -302,7 +302,7 @@ export class EditQNAService {
         console.log('Success', data);
         answer.patchValue({
           editAnswer: false,
-          answerText: answer.value.answerText,
+          answerText: answerTextField.value,
           answerId: data['id'],
           correct: answer.value.correct
         });
@@ -364,13 +364,15 @@ export class EditQNAService {
     this.qnaForm['controls']['newQna']['controls'][indexOfQuestion]['controls']['answers']['removeAt'](indexOfAnswer);
   }
 
-  createQNA(newQna: any, indexOfQuestion: any) {
+  createQNA(newQna: any, indexOfQuestion: any, newQuestionTextField: any) {
     //TODO - Add create QNA
     // const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: newQna.get('answers')['controls']});
     // newQna.get('answers')['controls']
 
     //'{"topic":"<topic_id>","question":"<question_id>","answers":["<answer_text_1>","<answer_text_2>",
      //     "<answer_text_3>"]}' "127.0.0.1:8000/api/qna/"
+    newQna.value.questionText = newQuestionTextField.value
+
     console.log(newQna);
     const answers = [];
     const wrongAnswers = [];
