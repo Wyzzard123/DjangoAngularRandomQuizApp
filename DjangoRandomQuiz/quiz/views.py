@@ -259,7 +259,6 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
         along with the answer itself, so that we can create the appropriate new model.
         """
         answer = self.get_object()
-        question = None
 
         # If we have passed in question_id, we will take that out of the request data to avoid issues with
         #  the serializer.
@@ -271,6 +270,9 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
             except Exception as e:
                 # Topic does not exist.
                 return Response({"error_description": "Question Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({"error_description": "Pass in a question_id"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if the answer is meant to be correct
         correct = None
@@ -289,6 +291,15 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
 
         # The new answer text. Use strip() as is_valid() will do this as well.
         updated_answer_text = request.data['text'].strip()
+
+        if correct is False and answer in question.answers.all():
+            # If this is a correct answer that is being swapped to False, check that we still have at least one other
+            # correct answer.
+            other_correct_answers = question.answers.all().exclude(id=answer.id)
+            if other_correct_answers.count() == 0:
+               return Response({"error_description": "Cannot change this to wrong answer. You only have one correct "
+                                                     "answer left for this question."},
+                               status=status.HTTP_400_BAD_REQUEST)
 
         if answer.questions.count() + answer.wrong_questions.count() <= 1:
             # TODO - Check for whether we have an old answer.
@@ -351,7 +362,11 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
             # Remove the current answer from the model.
             question.answers.remove(answer)
 
-            if self.get_queryset().filter(text=updated_answer_text):
+            if answer.text == updated_answer_text:
+                # If we haven't changed the answer text, use the same answer.
+                new_answer = answer
+
+            elif self.get_queryset().filter(text=updated_answer_text):
                 # If the updated answer text matches another answer already in the database, add that to the existing
                 #  question.
                 new_answer = self.get_queryset().get(text=updated_answer_text)
@@ -364,6 +379,8 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
 
             # Add to correct or wrong answers
             if correct is True or correct is None:
+                if new_answer in question.wrong_answers.all():
+                    question.wrong_answers.remove(new_answer)
                 question.answers.add(new_answer)
             else:
                 # Check that the answer isn't already in the correct answers of the question. Ifit is, remove it.
@@ -386,6 +403,8 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
         """
         Only destroy the object for the given question as there may be multiples of the same answer.
         We must pass in the question ID.
+
+        # TODO - Account for wrong_answers and answers and wrong_questions and questions.
         """
         answer = self.get_object()
         question = None
@@ -400,6 +419,18 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
             except Exception as e:
                 # Topic does not exist.
                 return Response({"error_description": "Question Does Not Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error_description": "Pass in a question_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if answer in question.answers.all():
+            # If this is a correct answer that is being deleted, check that we still have at least one other
+            # correct answer.
+            other_correct_answers = question.answers.all().exclude(id=answer.id)
+            if other_correct_answers.count() == 0:
+               return Response({"error_description": "Cannot delete this answer. You only have one correct "
+                                                     "answer left for this question."},
+                               status=status.HTTP_400_BAD_REQUEST)
+
         if answer.questions.count() == 0:
             # If there is no question attached, just delete the answer.
             self.perform_destroy(answer)
