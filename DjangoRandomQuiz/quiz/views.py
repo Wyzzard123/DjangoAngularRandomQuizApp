@@ -412,8 +412,8 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                 self.perform_destroy(answer)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             else:
-                return Response({"error_description": "This question has only one answer left. Add another answer "
-                                                      "before deleting the question."},
+                return Response({"error_description": "This question has only one answer left. Add another answer to "
+                                                      "this question before deleting the answer."},
                                 status=status.HTTP_400_BAD_REQUEST)
         else:
             if not question:
