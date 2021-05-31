@@ -261,9 +261,18 @@ export class EditQNAService {
   editAnswer(qna: any, answer: any, answerTextField: any) {
     // Pass in a question and send a put request to change the question text. Note this is qna from "let qna of _editQNA.qnaForm.get('qna')['controls']"
 
+    // If this answer is wrong, check that there is at least one correct answer left. Otherwise, throw an error to
+    // avoid issue where answer gets deleted.
+    if (!answer.value.correct) {
+      const otherCorrectAnswers = qna.value.answers.filter(a => a.correct === true && a.answerId !== answer.value.answerId);
+      console.log("OTHER CORRECT ANSWERS", otherCorrectAnswers)
+      if (otherCorrectAnswers.length === 0) {
+        answer.value.errors = {error_description: 'You must provide at least one right answer.'}
+        return;
+      }
+    }
+
     // Note, the answers will be added by Django.
-    console.log("CORRECT")
-    console.log(answer.value.correct)
     const payload = JSON.stringify({topic: this.qnaForm.value.topicId, text: answerTextField.value, correct: answer.value.correct, question_id: qna.value.questionId});
     this.http.put(this.AnswerURL + `${answer.value.answerId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
