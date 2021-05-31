@@ -371,8 +371,6 @@ export class EditQNAService {
 
     //'{"topic":"<topic_id>","question":"<question_id>","answers":["<answer_text_1>","<answer_text_2>",
      //     "<answer_text_3>"]}' "127.0.0.1:8000/api/qna/"
-    newQna.value.questionText = newQuestionTextField.value
-
     console.log(newQna);
     const answers = [];
     const wrongAnswers = [];
@@ -383,6 +381,12 @@ export class EditQNAService {
         wrongAnswers.push(answer.answerText);
       }
     }
+    if (answers.length === 0) {
+      newQna.value.errors = {error_description: 'You must provide at least one right answer.'}
+      return;
+    }
+
+    newQna.value.questionText = newQuestionTextField.value;
 
     const payload = JSON.stringify({topic: this.qnaForm.value.topicId, question: newQna.value.questionText,
       answers: answers, wrong_answers: wrongAnswers
