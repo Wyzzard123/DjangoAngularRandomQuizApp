@@ -313,9 +313,9 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                 else:
                     question = answer.wrong_questions.get()
 
-            # If the answer being updated has only one question (or none), then simply perform update as per the normal API
-            #  update view if there is no question with the same updated answer text.
-            if not self.get_queryset().filter(text=updated_answer_text):
+            # If the answer being updated has only one question (or none), then simply perform update as per the normal
+            #  API update view if there is no question with the same updated answer text.
+            if not self.get_queryset().filter(text=updated_answer_text).exclude(id=answer.id):
                 serializer.is_valid(raise_exception=True)
                 self.perform_update(serializer)
                 if getattr(answer, '_prefetched_objects_cache', None):
@@ -324,14 +324,22 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                     answer._prefetched_objects_cache = {}
             else:
                 # If there is an old answer with the same text, we will delete the current answer (since there is 0 or
-                # one question that reference(s) it) then reference the old answer instead:
+                # one question that reference(s) it) then reference the old answer instead. This should not have to be
+                # used if the exclude in self.get_queryset().filter(text=updated_answer_text).exclude(id=answer.id) is
+                #  done correctly, but this is left here as a failsafe, as it can lead to unexpected behaviour if we
+                #  delete the answer when the answer text is the same as the new answer text.
+                if answer.text == updated_answer_text:
+                    # If we haven't changed the answer text, use the same answer.
+                    new_answer = answer
 
-                # Try to get the old answer first. If we get an error, then we will not delete the previously referenced
-                #  answer.
-                new_answer = self.get_queryset().filter(text=updated_answer_text).get()
+                else:
+                    # Try to get the old answer first. If we get an error, then we will not delete the previously
+                    #  referenced answer.
+                    new_answer = self.get_queryset().filter(text=updated_answer_text).get()
 
-                # Delete the old answer and reference the new one.
-                answer.delete()
+                    # Delete the old answer and reference the new one.
+                    answer.delete()
+
                 answer = new_answer
 
             # If the answer has been changed to wrong or right, switch the answer around.
