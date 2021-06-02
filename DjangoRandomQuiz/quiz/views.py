@@ -217,12 +217,23 @@ class AnswerAPIView(UserDataBasedOnRequestMixin, NoUpdateCreatorMixin, viewsets.
                         question.answers.add(answer)
                     else:
                         question.answers.add(answer)
+                # If we are adding a wrong answer
                 else:
                     if question.wrong_answers.filter(id=answer.id):
                         continue
                     elif question.answers.filter(id=answer.id):
-                        question.answers.remove(answer)
-                        question.wrong_answers.add(answer)
+                        # If the answer was previously correct, switch it to wrong if correct is False. Only do this
+                        #  if there are other correct answers remaining.
+                        other_correct_answers = question.answers.all().exclude(id=answer.id)
+                        if other_correct_answers.count() == 0:
+                            return Response(
+                                {"error_description": "You cannot do this as you only have one correct "
+                                                      "answer left for this question (Note: This answer matches "
+                                                      "another answer that is attached to this question)."},
+                                status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            question.answers.remove(answer)
+                            question.wrong_answers.add(answer)
                     else:
                         question.wrong_answers.add(answer)
         # If this answer is completely new:
