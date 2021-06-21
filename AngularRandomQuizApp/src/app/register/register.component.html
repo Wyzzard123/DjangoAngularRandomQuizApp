@@ -3,16 +3,16 @@
   <div class="row">
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Username:</label><br/>
-      <input type="text" name="register-username" [(ngModel)]="newUser.username">
+      <input type="text" name="register-username" [(ngModel)]="newUser.username" (keyup.enter)="register()">
       <span *ngFor="let error of _registrationService.errors.username"><br/>{{ error }}</span></div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Password:</label><br/>
-      <input type="password" name="register-password" [(ngModel)]="newUser.password">
+      <input type="password" name="register-password" [(ngModel)]="newUser.password" (keyup.enter)="register()">
       <span *ngFor="let error of _registrationService.errors.password"><br/>{{ error }}</span>
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
       <label>Confirm Password:</label><br/>
-      <input type="password" name="register-confirm-password" [(ngModel)]="newUser.confirmPassword">
+      <input type="password" name="register-confirm-password" [(ngModel)]="newUser.confirmPassword" (keyup.enter)="register()">
       <span *ngFor="let error of _registrationService.errors.confirmPassword"><br/>{{ error }}</span>
     </div>
     <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
