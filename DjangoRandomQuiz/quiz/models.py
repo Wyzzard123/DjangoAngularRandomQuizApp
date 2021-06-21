@@ -369,7 +369,7 @@ class Quiz(UUIDAndTimeStampAbstract):
         """Passes a dict with the quiz and the UUID of this model."""
         return {'uuid': self.uuid, **self.quiz}
 
-    def check_quiz_answers(self, chosen_answers):
+    def check_quiz_answers(self, chosen_answers, normalize=True):
         """TODO - See what the format of receiving the answers is.
         For each chosen answer per a given question, check if the answer is correct.
 
@@ -394,6 +394,8 @@ class Quiz(UUIDAndTimeStampAbstract):
         "id": <quiz_attempt_id>
         }
 
+        If normalize=True, each question will be worth 1 point. The points and penalty for each question will be
+        normalized accordingly. This is the method that Dynatrace uses to score its quizzes.
         """
         questions = self.quiz['questions']
         no_of_correct_answers = 0
@@ -425,7 +427,7 @@ class Quiz(UUIDAndTimeStampAbstract):
             # Start the score counter at 0.
 
             # The total question points without deduction
-            question_points = 0
+            question_points_before_penalty = 0
 
             # The total penalty.
             penalty = 0
@@ -451,7 +453,7 @@ class Quiz(UUIDAndTimeStampAbstract):
                 if is_correct and chosen:
                     # If the correct answer was chosen, add to the score.
                     no_of_correct_answers += 1
-                    question_points += 1
+                    question_points_before_penalty += 1
                 elif is_correct and not chosen:
                     # Otherwise, if the correct answer was not chosen, add to the no of wrong (unchosen) answers.
                     no_of_wrong_answers += 1
@@ -461,15 +463,29 @@ class Quiz(UUIDAndTimeStampAbstract):
                     if question_type == 'checkbox':
                         penalty += 1
             # Reset question score to 0 if it falls below 0.
-            question_points_scored = question_points - penalty if (question_points - penalty) >= 0 else 0
+            question_points_scored = question_points_before_penalty - penalty \
+                if (question_points_before_penalty - penalty) >= 0 else 0
+
+            if normalize:
+                # The score to be added will be divided by the possible_question_points. E.g. if we have 2 out of 3
+                #  points, then we will divide by 3, so that the final score for this question is 0.66 out of 1 points.
+                normalize_factor = possible_question_points
+
+                # Update values with normalize_factor.
+                question_points_scored /= normalize_factor
+                possible_question_points = 1
+                question_points_before_penalty /= normalize_factor
+                penalty /= normalize_factor
+
             # Add the possible question score to the possible quiz score.
             possible_points += possible_question_points
             # Add the question score to the total score
             total_points_scored += question_points_scored
+
             updated_dict_question.update({
                 'question_points_scored': question_points_scored,
                 'possible_question_points': possible_question_points,
-                'question_points_before_penalty': question_points,
+                'question_points_before_penalty': question_points_before_penalty,
                 'penalty': penalty
             })
             attempt_dict_questions_list.append(updated_dict_question)
