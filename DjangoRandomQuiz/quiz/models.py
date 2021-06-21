@@ -80,8 +80,10 @@ class Topic(UUIDAndTimeStampAbstract):
         default_related_name = "topics"
         unique_together = [["creator", "name"]]
 
-    def generate_quiz(self, no_of_questions, no_of_choices,
-                      show_all_alternative_answers=False):
+    def generate_quiz(self, no_of_questions=4, no_of_choices=4,
+                      show_all_alternative_answers=False,
+                      fixed_no_of_choices=False
+                      ):
         """
         Generate a list of questions based on a topic text, number of questions per topic and number of choices per
         question.
@@ -109,6 +111,11 @@ class Topic(UUIDAndTimeStampAbstract):
         no_of_choices constraint), each question will have all possible answers shown. Otherwise, the number of correct
         alternative answers shown will be random.
 
+        If fixed_no_of_choices is True (False by default), we will ignore no_of_choices and show_all_alternative_answers.
+        Instead, we will show every possible correct and wrong answer for every given question (no_of_questions is still
+        used). Essentially, this converts the app from a random quiz app to a normal fixed quiz app. Use this if you
+        have enough wrong choices for all questions.
+
         For each question, if the max number of answers is more than one, the question will be a checkbox (multiple choices)
         instead of a radio button (one choice).
         """
@@ -120,6 +127,10 @@ class Topic(UUIDAndTimeStampAbstract):
         quiz = {"topic": quiz_topic.id,
                 "topic_name": quiz_topic.name,
                 "questions": []}
+
+        # Automatically set default values if invalid values are set (this should be caught in the frontend):
+        no_of_questions = no_of_questions if no_of_questions > 0 else 4
+        no_of_choices = no_of_choices if no_of_choices > 0 else 4
 
         # Limit number of questions and number of choices
         max_questions = quiz_topic.max_questions()
@@ -140,77 +151,96 @@ class Topic(UUIDAndTimeStampAbstract):
             if question.has_one_answer():
                 question_type = "radio"
                 correct_answer = question.answer
-
-                no_of_wrong_choices = no_of_choices - 1
-
-                # Set fixed wrong answers
                 fixed_wrong_answers = question.wrong_answers.all()
-                no_of_fixed_wrong_choices = min(fixed_wrong_answers.count(), no_of_wrong_choices)
+
+                if fixed_no_of_choices:
+                    no_of_wrong_choices = fixed_wrong_answers.count()
+                    no_of_fixed_wrong_choices = no_of_wrong_choices
+                else:
+                    no_of_wrong_choices = no_of_choices - 1
+                    no_of_fixed_wrong_choices = min(fixed_wrong_answers.count(), no_of_wrong_choices)
+
+                # Set fixed wrong choices
                 fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
 
-                # Set random wrong answers
-                no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
-                possible_random_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
+                if fixed_no_of_choices:
+                    # No random wrong choices if using fixed_no_of_choices mode
+                    random_wrong_choices = []
+                else:
+                    # Set random wrong answers
+                    no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
+                    possible_random_wrong_choices = quiz_choices.exclude(id=correct_answer.id)
 
-                # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
-                for fixed_wrong_answer in fixed_wrong_answers:
-                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
+                    # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
+                    for fixed_wrong_answer in fixed_wrong_answers:
+                        possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
 
-                random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices,
-                                                                      no_of_random_wrong_choices)
+                    random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices,
+                                                                          no_of_random_wrong_choices)
 
                 all_choices = [correct_answer.text, *fixed_wrong_choices, *random_wrong_choices]
 
             else:
                 question_type = "checkbox"
                 correct_answers = question.answers.all()
+                if fixed_no_of_choices:
+                    max_no_of_correct_answers = correct_answers.count()
+                else:
+                    # The number of correct answers cannot be higher than the number of choices, but it also cannot
+                    # be higher than the total number of possible correct answers.
+                    max_no_of_correct_answers = min(correct_answers.count(), no_of_choices)
 
                 # Set fixed wrong answers
                 fixed_wrong_answers = question.wrong_answers.all()
                 no_of_fixed_wrong_answers = fixed_wrong_answers.count()
 
-                possible_random_wrong_choices = quiz_choices
-                # Chain .exclude() to exclude all correct answers from the set of wrong_choices.
-                for correct_answer in correct_answers:
-                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=correct_answer.id)
-                # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
-                for fixed_wrong_answer in fixed_wrong_answers:
-                    possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
+                if fixed_no_of_choices:
+                    correct_choices = [correct_answer.text for correct_answer in correct_answers]
+                    random_wrong_choices = []
+                    no_of_fixed_wrong_choices = no_of_fixed_wrong_answers
+                    fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
 
-                # We have to calibrate the number of correct answers based on the max number of wrong choices. If we have
-                #  too few possible wrong choices, we cannot have too few correct answers.
-                max_no_of_wrong_choices = len(possible_random_wrong_choices) + no_of_fixed_wrong_answers
-                # We will make sure to have at least one correct answer.
-                min_no_of_correct_answers = max(1, no_of_choices - max_no_of_wrong_choices)
-
-                # The number of correct answers cannot be higher than the number of choices, but it also cannot be higher
-                #  than the total number of possible correct answers.
-                max_no_of_correct_answers = min(correct_answers.count(), no_of_choices)
-
-                # Randomly allocate the number of correct answers with a number between the minimum and maximum number of
-                #  correct answers.
-                if not show_all_alternative_answers:
-                    try:
-                        no_of_correct_answers = random.randint(min_no_of_correct_answers, max_no_of_correct_answers)
-                    except ValueError:
-                        print(f"WARNING: Empty question: '{question_text}'")
-                        continue
                 else:
-                    # If we say show_all_alternative_answers, we will either show all the correct answers or the max no of
-                    #  choices per question, depending on which is lower.
-                    no_of_correct_answers = max_no_of_correct_answers
+                    possible_random_wrong_choices = quiz_choices
+                    # Chain .exclude() to exclude all correct answers from the set of wrong_choices.
+                    for correct_answer in correct_answers:
+                        possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=correct_answer.id)
+                    # Chain .exclude() to exclude all fixed wrong choices answers from the set of random_wrong_choices.
+                    for fixed_wrong_answer in fixed_wrong_answers:
+                        possible_random_wrong_choices = possible_random_wrong_choices.exclude(id=fixed_wrong_answer.id)
 
-                # No of wrong choices will be no of choices minus no of correct answers.
-                no_of_wrong_choices = no_of_choices - no_of_correct_answers
+                    # We have to calibrate the number of correct answers based on the max number of wrong choices. If
+                    # we have too few possible wrong choices, we cannot have too few correct answers.
+                    max_no_of_wrong_choices = len(possible_random_wrong_choices) + no_of_fixed_wrong_answers
+                    # We will make sure to have at least one correct answer.
+                    min_no_of_correct_answers = max(1, no_of_choices - max_no_of_wrong_choices)
 
-                no_of_fixed_wrong_choices = min(no_of_fixed_wrong_answers, no_of_wrong_choices)
-                fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
+                    # Randomly allocate the number of correct answers with a number between the minimum and maximum
+                    # number of correct answers.
+                    if not show_all_alternative_answers:
+                        try:
+                            no_of_correct_answers = random.randint(min_no_of_correct_answers, max_no_of_correct_answers)
+                        except ValueError:
+                            print(f"WARNING: Empty question: '{question_text}'")
+                            continue
+                    else:
+                        # If we say show_all_alternative_answers, we will either show all the correct answers or the
+                        # max no of choices per question, depending on which is lower.
+                        no_of_correct_answers = max_no_of_correct_answers
 
-                no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
-                random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices, no_of_random_wrong_choices)
-                correct_answers = random.sample([correct_answer.text for correct_answer in correct_answers],
-                                                no_of_correct_answers)
-                all_choices = [*correct_answers, *fixed_wrong_choices, *random_wrong_choices]
+                    # No of wrong choices will be no of choices minus no of correct answers.
+                    no_of_wrong_choices = no_of_choices - no_of_correct_answers
+
+                    no_of_fixed_wrong_choices = min(no_of_fixed_wrong_answers, no_of_wrong_choices)
+                    fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
+
+                    no_of_random_wrong_choices = max(0, no_of_wrong_choices - no_of_fixed_wrong_choices)
+                    random_wrong_choices = generate_list_of_wrong_choices(possible_random_wrong_choices,
+                                                                          no_of_random_wrong_choices)
+                    correct_choices = random.sample([correct_answer.text for correct_answer in correct_answers],
+                                                    no_of_correct_answers)
+
+                all_choices = [*correct_choices, *fixed_wrong_choices, *random_wrong_choices]
             # all_choices = [choice for choice in all_choices]
             # Shuffle the list of choices
             random.shuffle(all_choices)
