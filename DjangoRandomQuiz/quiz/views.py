@@ -723,8 +723,13 @@ class GenerateQuizAPIView(QuizViewSet):
         if serializer.is_valid():
             no_of_questions = serializer.validated_data['no_of_questions']
             no_of_choices = serializer.validated_data['no_of_choices']
+            show_all_alternative_answers = serializer.validated_data['show_all_alternative_answers']
+            fixed_choices_only = serializer.validated_data['fixed_choices_only']
+
             randomly_generated_quiz = topic.generate_quiz(no_of_questions=no_of_questions,
-                                                          no_of_choices=no_of_choices).quiz
+                                                          no_of_choices=no_of_choices,
+                                                          show_all_alternative_answers=show_all_alternative_answers,
+                                                          fixed_choices_only=fixed_choices_only).quiz
             return Response(randomly_generated_quiz, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

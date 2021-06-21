@@ -48,6 +48,8 @@ class QuizSerializer(serializers.Serializer):
 
     # Parameters to be passed in to the generate_quiz method of topic.
     no_of_questions = serializers.IntegerField()
+    # Providing default value of 4 in case fixed_choices_only is set to True. If so, we want to be able to safely ignore
+    #  this parameter.
     no_of_choices = serializers.IntegerField(default=4)
     show_all_alternative_answers = serializers.BooleanField(default=False)
 
