@@ -68,8 +68,19 @@
         </div>
         <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
             <label>Number of Choices:</label><br/>
-            <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices">
+            <input type="number" name="no-of-choices" [(ngModel)]="quizSettings.noOfChoices"
+            [disabled]="quizSettings.fixedQuizMode">
         </div>
+        <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+            <label>Always Show All Correct Choices:</label><br/>
+            <input type="checkbox" name="show-alternative-answers" [(ngModel)]="quizSettings.showAllAlternativeAnswers"
+            [disabled]="quizSettings.fixedQuizMode">
+        </div>
+        <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+            <label>Fixed Quiz Mode:</label><br/>
+            <input type="checkbox" name="fixed-quiz-mode" [(ngModel)]="quizSettings.fixedQuizMode">
+        </div>
+
         <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4">
             <button (click)="generateQuiz()" class="btn btn-primary" [disabled]="quizSettings.topicId == selectATopicIndex || quizSettings.topicId == createNewTopicIndex
       || quizSettings.noOfQuestions <= 0 || quizSettings.noOfChoices <= 0">Generate Quiz
