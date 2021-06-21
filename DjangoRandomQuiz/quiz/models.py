@@ -82,7 +82,7 @@ class Topic(UUIDAndTimeStampAbstract):
 
     def generate_quiz(self, no_of_questions=4, no_of_choices=4,
                       show_all_alternative_answers=False,
-                      fixed_no_of_choices=False
+                      fixed_choices_only=False
                       ):
         """
         Generate a list of questions based on a topic text, number of questions per topic and number of choices per
@@ -111,7 +111,7 @@ class Topic(UUIDAndTimeStampAbstract):
         no_of_choices constraint), each question will have all possible answers shown. Otherwise, the number of correct
         alternative answers shown will be random.
 
-        If fixed_no_of_choices is True (False by default), we will ignore no_of_choices and show_all_alternative_answers.
+        If fixed_choices_only is True (False by default), we will ignore no_of_choices and show_all_alternative_answers.
         Instead, we will show every possible correct and wrong answer for every given question (no_of_questions is still
         used). Essentially, this converts the app from a random quiz app to a normal fixed quiz app. Use this if you
         have enough wrong choices for all questions.
@@ -153,7 +153,7 @@ class Topic(UUIDAndTimeStampAbstract):
                 correct_answer = question.answer
                 fixed_wrong_answers = question.wrong_answers.all()
 
-                if fixed_no_of_choices:
+                if fixed_choices_only:
                     no_of_wrong_choices = fixed_wrong_answers.count()
                     no_of_fixed_wrong_choices = no_of_wrong_choices
                 else:
@@ -163,8 +163,8 @@ class Topic(UUIDAndTimeStampAbstract):
                 # Set fixed wrong choices
                 fixed_wrong_choices = generate_list_of_wrong_choices(fixed_wrong_answers, no_of_fixed_wrong_choices)
 
-                if fixed_no_of_choices:
-                    # No random wrong choices if using fixed_no_of_choices mode
+                if fixed_choices_only:
+                    # No random wrong choices if using fixed_choices_only mode
                     random_wrong_choices = []
                 else:
                     # Set random wrong answers
@@ -183,7 +183,7 @@ class Topic(UUIDAndTimeStampAbstract):
             else:
                 question_type = "checkbox"
                 correct_answers = question.answers.all()
-                if fixed_no_of_choices:
+                if fixed_choices_only:
                     max_no_of_correct_answers = correct_answers.count()
                 else:
                     # The number of correct answers cannot be higher than the number of choices, but it also cannot
@@ -194,7 +194,7 @@ class Topic(UUIDAndTimeStampAbstract):
                 fixed_wrong_answers = question.wrong_answers.all()
                 no_of_fixed_wrong_answers = fixed_wrong_answers.count()
 
-                if fixed_no_of_choices:
+                if fixed_choices_only:
                     correct_choices = [correct_answer.text for correct_answer in correct_answers]
                     random_wrong_choices = []
                     no_of_fixed_wrong_choices = no_of_fixed_wrong_answers
