@@ -65,7 +65,7 @@ class Topic(UUIDAndTimeStampAbstract):
     def max_choices(self):
         """Returns the max number of choices for a given topic and user."""
         return reduce(lambda cumulative_total, answer_count_per_question: cumulative_total + answer_count_per_question,
-               [question.answers.count() + question.wrong_answers.count() for question in self.questions.all()])
+               [question.answers.count() for question in self.questions.all()])
 
     def pool_of_choices(self):
         """Returns all choices for a given topic and user."""
