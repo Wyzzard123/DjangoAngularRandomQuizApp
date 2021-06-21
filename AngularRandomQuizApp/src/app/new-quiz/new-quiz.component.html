@@ -289,9 +289,9 @@
                     </div>
                     <div *ngIf="_newQuiz.quizForm.value.answered"
                          [ngClass]="{'correct': (qna.value.questionPointsScored / qna.value.possibleQuestionPoints) >= 0.5, 'penalty': (qna.value.questionPointsScored / qna.value.possibleQuestionPoints) < 0.5 }">
-                        Score: {{qna.value.questionPointsScored}} / {{qna.value.possibleQuestionPoints}}
+                        Score: {{qna.value.questionPointsScored | number: '1.0-2'}} / {{qna.value.possibleQuestionPoints | number: '1.0-2'}}
                     </div>
-                    <div *ngIf="qna.value.penalty > 0" class="penalty">Penalty: {{qna.value.penalty}}</div>
+                    <div *ngIf="qna.value.penalty > 0" class="penalty">Penalty: {{qna.value.penalty | number: '1.0-2'}}</div>
                 </div>
             </div>
             <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4" *ngIf="!_newQuiz.quizForm.value.answered">
@@ -304,8 +304,8 @@
         <div class="row"
              [ngClass]="{'correct': _newQuiz.quizForm.value.score >= 0.5, 'penalty':  _newQuiz.quizForm.value.score < 0.5}">
             <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
-                Score: {{_newQuiz.quizForm.value.totalPointsScored}}
-                / {{_newQuiz.quizForm.value.possiblePoints}}
+                Score: {{_newQuiz.quizForm.value.totalPointsScored | number: '1.0-2'}}
+                / {{_newQuiz.quizForm.value.possiblePoints | number: '1.0-2'}}
             </div>
             <div class="col-xs-3 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2">
                 <!--        '1.2-2' means {minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}:
@@ -313,7 +313,7 @@
                 A minimum of 1 digit will be shown before decimal point
                 It will show at least 2 digits after decimal point
                 But not more than 2 digits -->
-                Percentage: {{ _newQuiz.quizForm.value.score * 100 | number: '1.2-2'}} %<br>
+                Percentage: {{ _newQuiz.quizForm.value.score * 100 | number: '1.0-2'}} %<br>
             </div>
         </div>
         <div class="row">
