@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {UserService} from './user.service';
 import {environment} from '../environments/environment';
 import {FormArray, FormBuilder, FormControl, FormGroup} from '@angular/forms';
-import {ScrollerService} from "./scroller.service";
+import {ScrollerService} from './scroller.service';
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +50,12 @@ export class NewQuizService {
 
 
   generateQuiz(quizSettings): any {
-    const payload = JSON.stringify({no_of_questions: quizSettings.noOfQuestions, no_of_choices: quizSettings.noOfChoices});
+    const payload = JSON.stringify({
+      no_of_questions: quizSettings.noOfQuestions,
+      no_of_choices: quizSettings.noOfChoices,
+      show_all_alternative_answers: quizSettings.showAllAlternativeAnswers,
+      fixed_choices_only: quizSettings.fixedQuizMode
+    });
     this.http.put(this.generateQuizUrl + `${quizSettings.topicId}/`, payload, this.generateHttpHeaders()).subscribe(
       data => {
         // Reset errors.
@@ -70,7 +75,7 @@ export class NewQuizService {
 
       },
       err => {
-        console.log('This is the error', err)
+        console.log('This is the error', err);
         this.errors = err.error;
       }
     );

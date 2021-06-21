@@ -46,6 +46,11 @@ export class NewQuizComponent implements OnInit {
       topicId: 0,
       noOfQuestions: 4,
       noOfChoices: 4,
+      // Equivalent to show_all_alternative_answers in Django. Shows all correct answers if possible.
+      showAllAlternativeAnswers: false,
+      // Equivalent to fixed_choices_only in Django. Uses fixed questions and answers instead of randomly generated
+      //  choices. If set to True, ignores noOfChoices and showAllAlternativeAnswers
+      fixedQuizMode: false
     };
   }
 
