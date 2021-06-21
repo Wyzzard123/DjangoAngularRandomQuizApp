@@ -47,7 +47,7 @@ class QuizSerializer(serializers.Serializer):
     """
 
     # Parameters to be passed in to the generate_quiz method of topic.
-    no_of_questions = serializers.IntegerField(default=4)
+    no_of_questions = serializers.IntegerField()
     no_of_choices = serializers.IntegerField(default=4)
     show_all_alternative_answers = serializers.BooleanField(default=False)
 
